@@ -1,0 +1,11 @@
+# Wedding Management · © 2026 myoung. All rights reserved.
+# 복사해서 .dev.vars 로 저장하세요. (.dev.vars 는 git 에 올라가지 않습니다)
+SESSION_SECRET=로컬용-아무-긴-문자열
+# 로컬에서 로그인 화면 없이 바로 앱을 보려면 1. 배포 환경에는 절대 넣지 마세요.
+ALLOW_OPEN=1
+# 구글 로그인을 로컬에서도 시험하려면 둘 다 채웁니다 (리디렉션 URI: http://localhost:8790/auth/google/callback)
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# ADMIN_EMAIL=
+# 약관·개인정보 페이지에 보일 연락처. 코드에 적지 않는다
+# CONTACT_EMAIL=

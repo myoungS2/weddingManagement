@@ -1,0 +1,8 @@
+# Wedding Management · © 2026 myoung. All rights reserved.
+node_modules/
+.wrangler/
+.dev.vars
+.idea/
+.DS_Store
+.claude/settings.local.json
+.claude/

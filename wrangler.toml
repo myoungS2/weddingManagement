@@ -1,0 +1,37 @@
+# Wedding Management · © 2026 myoung. All rights reserved.
+name = "wedding-management"
+main = "src/worker.js"
+compatibility_date = "2025-01-01"
+
+# 붙일 주소. 배포 전에 Cloudflare 존에 있는 도메인으로 바꾸거나, 이 블록을 지우면 *.workers.dev 로 뜹니다.
+# routes = [
+#   { pattern = "wedding.example.com", custom_domain = true }
+# ]
+
+# index.html 을 문자열로, assets/ 의 그림을 바이트로 번들에 넣어 워커가 직접 서빙합니다.
+rules = [
+  { type = "Text", globs = ["**/*.html"], fallthrough = true },
+  { type = "Data", globs = ["**/*.webp", "**/*.png"], fallthrough = true }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wedding-management"
+database_id = "00000000-0000-0000-0000-000000000000"   # npx wrangler d1 create wedding-management 결과로 바꿉니다
+
+# 파일함(계약서·음악·영상·레퍼런스). 로컬(wrangler dev --local)에서는 디스크에 흉내 내므로 바로 돕니다.
+# 배포 전에:  npx wrangler r2 bucket create wedding-management-files
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "wedding-management-files"
+
+[vars]
+# 로컬에서 로그인 없이 테스트할 때만. 배포한 주소에서는 절대 켜지 마세요. (.dev.vars 에 넣습니다)
+# ALLOW_OPEN = "1"
+
+# 아래는 secret 으로 넣습니다. SESSION_SECRET 이 없으면 로그인이 아예 안 됩니다.
+#   npx wrangler secret put SESSION_SECRET        openssl rand -base64 48
+#   npx wrangler secret put GOOGLE_CLIENT_ID      둘 다 있어야 구글 버튼이 생깁니다
+#   npx wrangler secret put GOOGLE_CLIENT_SECRET
+#   npx wrangler secret put ADMIN_EMAIL           관리자 화면을 열 계정
+#   npx wrangler secret put CONTACT_EMAIL         약관·개인정보 페이지의 연락처 (코드에 적지 않는다)
