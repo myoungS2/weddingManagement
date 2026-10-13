@@ -23,7 +23,7 @@ export const GUIDE_STEPS = [
   { view:'budget', target:'#tabs [data-view="budget"]', title:'예산 = 업체', body:'예산 탭에서 업체를 적습니다. 업체 하나가 예산 항목 하나예요. 후보로 적어 두고 계약하면 상태만 바꾸세요.' },
   { view:'budget', target:'header.ph [data-addvendor]', title:'업체 적기', body:'이 버튼으로 업체를 추가해요. 금액은 직접 쓰거나 단가 × 수량으로. 저장하면 바로 결제(예약금·중도금·잔금)와 질문, 첨부를 적을 수 있어요.' },
   { view:'budget', target:'.segs [data-sub="budget:vendor"]', title:'금액 뷰와 업체 뷰', body:'금액 뷰는 카테고리별 예산·예상·확정·지출·잔금 표, 업체 뷰는 카드예요. 표의 행을 누르면 그 카테고리 업체가 펼쳐집니다.' },
-  { view:'plan', target:'#tabs [data-view="plan"]', title:'예식일 역산 준비 순서', body:'일정 탭에서 "준비 가이드 채우기"를 한 번 누르면 D-12개월부터 D-7까지 할 일이 날짜에 맞춰 생겨요.' },
+  { view:'plan', target:'#tabs [data-view="plan"]', title:'예식일 역산 준비 순서', body:'일정 탭에서 "준비 가이드 채우기"를 한 번 누르면 D-12개월부터 D-7까지 할 일이 날짜에 맞춰 생겨요. 할 일을 누르면 기한·담당·메모를 고칠 수 있어요.' },
   { view:'plan', sub:['plan','dday'], target:'.segs [data-sub="plan:dday"]', title:'본식 식순', body:'시작 시각과 단계별 소요시간만 적으면 시각이 이어서 계산돼요. 입장곡·식전영상은 단계마다 첨부합니다.' },
   { view:'trip', target:'#tabs [data-view="trip"]', title:'신혼여행', body:'날짜별 일정과 하고 싶은 것, 항공·숙소 예약을 적어요. 예약은 예산의 신혼여행 카테고리에 자동으로 합산되고 환율 환산도 됩니다.' },
   { view:'more', sub:['more','menu'], target:'[data-go="more:ref"]', title:'레퍼런스', body:'헤어·드레스·촬영 컨셉 캡처를 모아 두고, 상담 때 "상담용 보기"로 넘겨 보세요. 신랑용·신부용으로 나눠 둘 수 있어요.' },

@@ -1,6 +1,7 @@
 /* Wedding Management · © 2026 myoung. All rights reserved.
  * 클릭·변경·입력 이벤트와 웨딩홀 콤보박스. */
 import { DEF_AVG, DEF_RATE, DEF_TAGS, LS } from './constants.js';
+import { openEvent, openTask } from './edit.js';
 import { download, exportCsv } from './export.js';
 import { delFile, pickFiles } from './files.js';
 import { openGuide, playIntro } from './guide.js';
@@ -31,7 +32,7 @@ export function init() {
 
   /* ═══ 이벤트 ═══════════════════════════════ */
   document.addEventListener('click', async e => {
-    const t = e.target.closest('[data-view],[data-sub],[data-go],[data-cat],[data-addvendor],[data-vendor],[data-deltask],[data-month],[data-delev],[data-upload],[data-delfile],[data-gf],[data-rsvp],[data-delguest],[data-memo],[data-ref],[data-rtag],[data-deltag],[data-copy],[data-killinv],[data-csv],[data-venue],[data-delcat],[data-premium],[data-delplan],[data-unlock],[data-forceout],[data-deluser],[data-pickvenue],[data-reqvenue],button');
+    const t = e.target.closest('[data-view],[data-sub],[data-go],[data-cat],[data-addvendor],[data-vendor],[data-deltask],[data-edittask],[data-editev],[data-month],[data-delev],[data-upload],[data-delfile],[data-gf],[data-rsvp],[data-delguest],[data-memo],[data-ref],[data-rtag],[data-deltag],[data-copy],[data-killinv],[data-csv],[data-venue],[data-delcat],[data-premium],[data-delplan],[data-unlock],[data-forceout],[data-deluser],[data-pickvenue],[data-reqvenue],button');
     if (!t) return;
     const d = t.dataset;
     if (d.view) { state.view=d.view; state.openCat=null; window.scrollTo(0,0); return render(); }
@@ -43,6 +44,8 @@ export function init() {
     if (d.unplan) { const x=state.events.find(y=>y.id===d.unplan); if (x) store.put('events', Object.assign({}, x, { date:'', time:'' })); return; }
     if (d.vendor) return openVendor(d.vendor);
     if (d.cat) { if (e.target.closest('input')) return; state.openCat = state.openCat===d.cat ? null : d.cat; return render(); }
+    if (d.edittask) return openTask(d.edittask);
+    if (d.editev) return openEvent(d.editev);
     if (d.deltask) return store.del('tasks', d.deltask);
     if (d.delev) return store.del('events', d.delev);
     if (d.month) { const b=(state.month||today().slice(0,7)).split('-').map(Number); const dt=new Date(b[0], b[1]-1+Number(d.month), 1); state.month=dt.getFullYear()+'-'+p2(dt.getMonth()+1); return render(); }
