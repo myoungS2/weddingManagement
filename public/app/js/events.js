@@ -75,9 +75,9 @@ export function init() {
     switch (t.id) {
       case 'seedGuide': return seedGuide();
       case 'seedDday': return seedDday();
-      case 'addTask': { const ti=$('#t-title').value.trim(); if (!ti) return; store.put('tasks',{ id:uid(), title:ti, group:$('#t-group').value.trim()||'직접 추가', due:$('#t-due').value, done:false, who:'both' }); return; }
-      case 'addStep': { const ti=$('#s-title').value.trim(); if (!ti) return; const n=state.events.filter(x=>x.kind==='dday').length; store.put('events',{ id:uid(), kind:'dday', title:ti, minutes:num($('#s-min').value)||10, sort:n+1, date:state.settings.weddingDate||'' }); return; }
-      case 'addEvent': { const ti=$('#e-title').value.trim(), dt=$('#e-date').value; if (!ti||!dt) return toast('날짜와 일정을 적어 주세요'); store.put('events',{ id:uid(), kind:'event', title:ti, date:dt, time:$('#e-time').value, vendorId:$('#e-vendor').value, memo:'' }); return; }
+      case 'addTask': { const ti=$('#t-title').value.trim(); if (!ti) return; store.put('tasks',{ id:uid(), title:ti, group:$('#t-group').value.trim()||'직접 추가', due:$('#t-due').value, done:false, who:'both', memo:$('#t-memo').value.trim() }); return; }
+      case 'addStep': { const ti=$('#s-title').value.trim(); if (!ti) return; const n=state.events.filter(x=>x.kind==='dday').length; store.put('events',{ id:uid(), kind:'dday', title:ti, minutes:num($('#s-min').value)||10, sort:n+1, date:state.settings.weddingDate||'', memo:$('#s-memo').value.trim() }); return; }
+      case 'addEvent': { const ti=$('#e-title').value.trim(), dt=$('#e-date').value; if (!ti||!dt) return toast('날짜와 일정을 적어 주세요'); store.put('events',{ id:uid(), kind:'event', title:ti, date:dt, time:$('#e-time').value, vendorId:$('#e-vendor').value, memo:$('#e-memo').value.trim() }); return; }
       case 'addGuest': { const n=$('#g-name').value.trim(); if (!n) return; store.put('guests',{ id:uid(), side:$('#g-side').value, rel:$('#g-rel').value, name:n, plus:num($('#g-plus').value), rsvp:'', memo:'', gift:0, meal:0 }); $('#g-name').focus(); return; }
       case 'importGuests': return importGuests();
       case 'importBudget': return importBudget();

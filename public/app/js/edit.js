@@ -22,7 +22,7 @@ export function openTask(id){
     '<div class="field"><label for="et-done">완료</label><label class="toggle"><input type="checkbox" class="chk" id="et-done" '+(t.done?'checked':'')+'><span>끝냈어요</span></label></div></div>' +
     '<div class="field"><label for="et-memo">메모</label><textarea id="et-memo" placeholder="견적 받은 곳, 확인할 것…">'+esc(t.memo||'')+'</textarea></div>' +
     (t.guideKey ? '<p class="muted small">준비 가이드에서 넣은 할 일입니다. 고쳐도 다시 채우기를 누를 때 겹치지 않습니다.</p>' : '');
-  openSheet('할 일 고치기', body, [
+  openSheet('할 일 수정', body, [
     { label:'삭제', cls:'danger', onClick:(b)=>{ if (!arm(b)) return; closeSheet(); store.del('tasks', id); toast('지웠습니다'); } },
     { label:'저장', cls:'primary', onClick:()=>{
       const title = $('#et-title').value.trim(); if (!title) return toast('할 일을 적어 주세요');
@@ -38,7 +38,7 @@ export function openTask(id){
 export function openEvent(id){
   const e = state.events.find(x => x.id === id); if (!e) return;
   const kind = e.kind || 'event';
-  const title = { event:'일정 고치기', dday:'식순 단계 고치기', trip:'여행 일정 고치기' }[kind] || '일정 고치기';
+  const title = { event:'일정 수정', dday:'식순 단계 수정', trip:'여행 일정 수정' }[kind] || '일정 수정';
   const vendors = state.vendors.filter(v => v.status !== 'dropped');
   const days = kind === 'trip' ? tripDays() : [];
   const body = () => {

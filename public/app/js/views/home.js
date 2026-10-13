@@ -28,4 +28,4 @@ export function renderHome(){
     '<div class="card"><h2 class="ct">할 일</h2>'+(todo.length?'<div class="list">'+todo.map(taskRow).join('')+'</div>':'<p class="muted small">일정 탭에서 "준비 가이드 채우기"를 누르면 예식일에 맞춘 할 일이 생깁니다.</p>')+'</div>' +
     '</div>';
 }
-export function taskRow(t){ return '<div class="it'+(t.done?' done':'')+'"><input type="checkbox" class="chk" data-task="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="완료"><div class="t" data-edittask="'+esc(t.id)+'" title="눌러서 고치기"><b>'+esc(t.title)+'</b><small>'+esc(t.group||'')+(t.due?' · '+fmtD(t.due):'')+(t.who&&t.who!=='both'?' · '+PAYER[t.who]:'')+'</small></div><button class="x" data-deltask="'+esc(t.id)+'" aria-label="삭제">×</button></div>'; }
+export function taskRow(t){ return '<div class="it'+(t.done?' done':'')+'"><input type="checkbox" class="chk" data-task="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="완료"><div class="t" data-edittask="'+esc(t.id)+'" title="눌러서 수정"><b>'+esc(t.title)+'</b><small>'+esc(t.group||'')+(t.due?' · '+fmtD(t.due):'')+(t.who&&t.who!=='both'?' · '+PAYER[t.who]:'')+'</small></div><button class="x" data-deltask="'+esc(t.id)+'" aria-label="삭제">×</button></div>'; }
