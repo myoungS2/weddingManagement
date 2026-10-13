@@ -14,13 +14,12 @@ import { AUTH_CSS, INTRO_CSS, LANDING_CSS } from './styles.js';
 export function landingPage(origin, google, loggedIn) {
   const nonce = b64(crypto.getRandomValues(new Uint8Array(16)));
   const cta = loggedIn ? '/' : google ? '/auth/google?next=' + encodeURIComponent('/#guide') : '/auth/signup';
-  const guide = loggedIn ? '/#guide' : '/auth/login?next=' + encodeURIComponent('/#guide');
   const html = '<!doctype html><html lang="ko"><head>' + pageHead(origin, SITE) + FONT_LINKS +
     '<style nonce="' + nonce + '">' + AUTH_CSS + INTRO_CSS + LANDING_CSS + '</style></head><body>' +
     '<main class="land">' +
       '<div class="st" id="st" title="다시 보기"><img class="w" src="/wordmark.webp?v=5" alt=""><img class="l" src="/logo.webp?v=5" alt=""></div>' +
       '<img class="wm" src="/wordmark.webp?v=5" alt="' + SITE + '" width="240">' +
-      '<div class="ctas"><a class="cta" href="' + cta + '">' + (loggedIn ? '내 장부 열기' : '우리의 결혼 계획하기') + '</a><a class="cta ghost" href="' + guide + '">사용 안내</a></div>' +
+      '<div class="ctas"><a class="cta" href="' + cta + '">' + (loggedIn ? '내 장부 열기' : '우리의 결혼 계획하기') + '</a></div>' +
       (loggedIn ? '' : '<p class="alt">이미 계정이 있나요? <a href="/auth/login">로그인</a></p>') +
       '<ul class="pts">' +
         '<li><img src="/art/rings.webp" alt=""><b>예산관리</b><span>업체 후보와 계약을 관리하세요. 그리고 금액정리를 한눈에!</span></li>' +
