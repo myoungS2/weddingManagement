@@ -1,17 +1,30 @@
 /* Wedding Management · © 2026 myoung. All rights reserved.
  * 결제 행·시트·월간 달력·식순·레퍼런스·상담용 보기. */
 /* 결제 행: 종류 · 금액 · 날짜 · 결제자 · 수단 · 메모 */
-.pays{display:flex;flex-direction:column;gap:6px}
-.pay{display:grid;grid-template-columns:76px 1fr 1fr;gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:var(--rs);background:var(--bg)}
-.pay.new{border-style:dashed;border-color:var(--pink2);margin-top:8px;background:var(--pink-mist)}
-.pay select,.pay input{padding:6px 8px;border:1px solid var(--line2);border-radius:6px;font-size:13px;min-width:0;width:100%;background:var(--bg)}
-.pay .pmemo{grid-column:1 / 3}
-.pay .x{grid-column:3}
-.pay input[type=checkbox]{width:16px;padding:0}
-.pay .pchk{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap}
-.pay.done .pchk{color:var(--good)}
-.pay .x{justify-self:end}
-@media (min-width:900px){.pay{grid-template-columns:76px 110px 100px 120px 96px 88px 1fr auto}.pay .pmemo,.pay .x{grid-column:auto}.pay.new{grid-template-columns:110px 100px 120px 96px 88px 1fr auto}}
+.pays{display:flex;flex-direction:column;gap:8px}
+/* 시트 폭(최대 520px) 안에서 화면 크기와 상관없이 6칸 격자, 세 줄로 놓는다 */
+.pay{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end;padding:10px 12px;border:1px solid var(--line);border-radius:var(--rs);background:var(--surface)}
+.pay .c1{grid-column:span 1}.pay .c2{grid-column:span 2}.pay .c3{grid-column:span 3}.pay .c4{grid-column:span 4}.pay .c5{grid-column:span 5}.pay .c6{grid-column:1 / -1}
+.pay select,.pay input{padding:7px 9px;border:1px solid var(--line2);border-radius:8px;font-size:13px;min-width:0;width:100%;background:var(--surface);height:34px;box-sizing:border-box}
+.pay input.amt{font-size:15px;font-weight:600;text-align:right}
+.pay .f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pay .f span{font-size:10.5px;color:var(--muted);padding-left:2px}
+.pay .pchk{display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border-radius:999px;background:var(--bg2);font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer;justify-self:start}
+.pay .pchk input{width:16px;height:16px;padding:0}
+.pay.done{background:var(--good-soft);border-color:transparent}
+.pay.done .pchk{background:var(--surface);color:var(--good);font-weight:600}
+.pay .x{justify-self:end;align-self:center}
+.pay.new{border-style:dashed;border-color:var(--pink2);margin-top:10px;background:var(--pink-mist)}
+.pay .newh{font-size:12px;font-weight:600;color:var(--pink-ink)}
+.pay #addPay{height:34px;justify-content:center}
+/* 시트가 좁을 때(휴대폰): 금액과 날짜가 잘리지 않게 한 줄을 더 쓴다 */
+#sheetBody{container-type:inline-size}
+@container (max-width:460px){
+  .pay .pchk{grid-column:span 2}.pay .t{grid-column:span 4}
+  .pay .amt,.pay .fd,.pay .fp,.pay .fm{grid-column:span 3}
+  .pay .memo{grid-column:span 5}.pay .x{grid-column:span 1}
+  .pay.new .t{grid-column:span 3}.pay.new .memo{grid-column:1 / -1}.pay.new .add{grid-column:1 / -1}
+}
 /* 시트: 넓으면 오른쪽, 좁으면 아래에서 */
 #scrim{position:fixed;inset:0;background:rgba(80,40,50,.32);z-index:30}
 #sheet{position:fixed;z-index:31;background:var(--surface);display:flex;flex-direction:column;

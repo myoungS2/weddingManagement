@@ -71,15 +71,22 @@ export function openVendor(id, catId){
     (isNew ? '<p class="muted small">저장하면 바로 이어서 결제(예약금·중도금·잔금·할부), 확인 질문, 구성 항목, 첨부를 적을 수 있어요.</p>' :
     '<div class="sub-list"><h4>결제 <span class="right">예약금 · 중도금 · 잔금 · 할부 · 추가금</span></h4>' +
       (pays.length?'<div class="pays">'+pays.map(p=>'<div class="pay'+(p.paidAt?' done':'')+'">' +
-        '<label class="pchk"><input type="checkbox" class="chk" data-paid="'+p.id+'" '+(p.paidAt?'checked':'')+'><span>'+(p.paidAt?'완료 '+fmtD(p.paidAt):'예정')+'</span></label>' +
-        '<select data-pf="title:'+p.id+'">'+PAY_TYPES.map(t=>'<option'+(t===p.title?' selected':'')+'>'+t+'</option>').join('')+(PAY_TYPES.indexOf(p.title)<0?'<option selected>'+esc(p.title)+'</option>':'')+'</select>' +
-        '<input class="num" data-money data-pf="amount:'+p.id+'" inputmode="numeric" value="'+(p.amount?won(p.amount):'')+'" placeholder="금액">' +
-        '<input type="date" data-pf="dueDate:'+p.id+'" value="'+esc(p.dueDate||'')+'" title="결제 예정일">' +
-        '<select data-pf="payer:'+p.id+'">'+Object.keys(PAYER).map(k=>'<option value="'+k+'"'+(k===(p.payer||'both')?' selected':'')+'>'+PAYER[k]+'</option>').join('')+'</select>' +
-        '<select data-pf="method:'+p.id+'">'+Object.keys(METHOD).map(k=>'<option value="'+k+'"'+(k===(p.method||'card')?' selected':'')+'>'+METHOD[k]+'</option>').join('')+'</select>' +
-        '<input data-pf="memo:'+p.id+'" value="'+esc(p.memo||'')+'" placeholder="메모 (할부 3/6, 현금영수증…)" class="pmemo">' +
-        '<button class="x" data-delpay="'+p.id+'" aria-label="삭제">×</button></div>').join('')+'</div>':'<p class="muted small">아직 결제 항목이 없습니다.</p>') +
-      '<div class="pay new"><select id="p-title">'+PAY_TYPES.map(t=>'<option>'+t+'</option>').join('')+'</select><input class="num" id="p-amount" data-money inputmode="numeric" placeholder="금액"><input id="p-date" type="date" title="결제 예정일"><select id="p-payer">'+Object.keys(PAYER).map(k=>'<option value="'+k+'"'+(k===(draft.payer||'both')?' selected':'')+'>'+PAYER[k]+'</option>').join('')+'</select><select id="p-method">'+Object.keys(METHOD).map(k=>'<option value="'+k+'">'+METHOD[k]+'</option>').join('')+'</select><input id="p-memo" placeholder="메모" class="pmemo"><button class="btn sm primary" id="addPay">추가</button></div>' +
+        '<label class="c2 pchk"><input type="checkbox" class="chk" data-paid="'+p.id+'" '+(p.paidAt?'checked':'')+'><span>'+(p.paidAt?'완료 '+fmtD(p.paidAt):'예정')+'</span></label>' +
+        '<select class="c2 t" data-pf="title:'+p.id+'" aria-label="종류">'+PAY_TYPES.map(t=>'<option'+(t===p.title?' selected':'')+'>'+t+'</option>').join('')+(PAY_TYPES.indexOf(p.title)<0?'<option selected>'+esc(p.title)+'</option>':'')+'</select>' +
+        '<input class="c2 num amt" data-money data-pf="amount:'+p.id+'" inputmode="numeric" value="'+(p.amount?won(p.amount):'')+'" placeholder="금액" aria-label="금액">' +
+        '<label class="c2 f fd"><span>예정일</span><input type="date" data-pf="dueDate:'+p.id+'" value="'+esc(p.dueDate||'')+'"></label>' +
+        '<label class="c2 f fp"><span>결제자</span><select data-pf="payer:'+p.id+'">'+Object.keys(PAYER).map(k=>'<option value="'+k+'"'+(k===(p.payer||'both')?' selected':'')+'>'+PAYER[k]+'</option>').join('')+'</select></label>' +
+        '<label class="c2 f fm"><span>수단</span><select data-pf="method:'+p.id+'">'+Object.keys(METHOD).map(k=>'<option value="'+k+'"'+(k===(p.method||'card')?' selected':'')+'>'+METHOD[k]+'</option>').join('')+'</select></label>' +
+        '<input class="c5 memo" data-pf="memo:'+p.id+'" value="'+esc(p.memo||'')+'" placeholder="메모 (할부 3/6, 현금영수증…)" aria-label="메모">' +
+        '<button class="c1 x" data-delpay="'+p.id+'" aria-label="결제 삭제">×</button></div>').join('')+'</div>':'<p class="muted small">아직 결제 항목이 없습니다.</p>') +
+      '<div class="pay new"><div class="c6 newh">새 결제</div>' +
+        '<select class="c2 t" id="p-title" aria-label="종류">'+PAY_TYPES.map(t=>'<option>'+t+'</option>').join('')+'</select>' +
+        '<input class="c2 num amt" id="p-amount" data-money inputmode="numeric" placeholder="금액" aria-label="금액">' +
+        '<label class="c2 f fd"><span>예정일</span><input id="p-date" type="date"></label>' +
+        '<label class="c3 f fp"><span>결제자</span><select id="p-payer">'+Object.keys(PAYER).map(k=>'<option value="'+k+'"'+(k===(draft.payer||'both')?' selected':'')+'>'+PAYER[k]+'</option>').join('')+'</select></label>' +
+        '<label class="c3 f fm"><span>수단</span><select id="p-method">'+Object.keys(METHOD).map(k=>'<option value="'+k+'">'+METHOD[k]+'</option>').join('')+'</select></label>' +
+        '<input class="c4 memo" id="p-memo" placeholder="메모" aria-label="메모">' +
+        '<button class="c2 add btn sm primary" id="addPay">추가</button></div>' +
       (function(){ const sumP=pays.reduce((s,p)=>s+num(p.amount),0), paidP=pays.filter(p=>p.paidAt).reduce((s,p)=>s+num(p.amount),0), tot=vendorTotal(v); return '<p class="muted small" style="margin-top:8px">결제 합계 '+won(sumP)+' / 업체 금액 '+won(tot)+(sumP&&sumP!==tot?' <span style="color:var(--warn)">(차이 '+won(tot-sumP)+')</span>':'')+' · 완료 '+won(paidP)+' · 잔금 '+won(Math.max(0,tot-paidP))+'</p>'; })()+'</div>' +
     '<div class="sub-list"><h4>확인 질문 <span class="right">상담 때 물어볼 것</span></h4>' +
       (draft.questions||[]).map(q=>'<div class="it" style="display:flex;gap:8px;align-items:flex-start;padding:6px 0"><input type="checkbox" class="chk" data-qdone="'+q.id+'" '+(q.done?'checked':'')+' style="margin-top:3px"><div style="flex:1;min-width:0"><div class="'+(q.done?'strike':'')+'">'+esc(q.q)+'</div><input data-qa="'+q.id+'" value="'+esc(q.a||'')+'" placeholder="답변 메모" style="width:100%;border:0;border-bottom:1px solid var(--line);padding:3px 0;font-size:13px;background:transparent"></div><button class="x" data-delq="'+q.id+'">×</button></div>').join('') +
