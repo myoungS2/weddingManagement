@@ -84,7 +84,12 @@ export async function handleAuth(req, env, url) {
     }
 
     /* 막 만들어진 계정이면 시작 화면(예식일·지역·연령대)을 한 번 거친다 */
-    const to = r.created ? '/auth/start?next=' + encodeURIComponent(st.next === '/' ? '/#guide' : st.next) : st.next;
+    /* 파트너 초대(/join)로 처음 온 사람은 시작 화면 없이 바로 합류한다.
+       신랑·신부·예식일은 초대한 사람의 장부에 이미 있고, 여기서 적으면 곧 버려질 빈 장부에 들어간다. */
+    const joining = /^\/join\//.test(st.next);
+    const to = !r.created ? st.next
+      : joining ? st.next + '?new=1'
+      : '/auth/start?next=' + encodeURIComponent(st.next === '/' ? '/#guide' : st.next);
     const h = new Headers({ location: url.origin + to });
     h.append('set-cookie', await sessionCookie(env, email, r.epoch, secure));
     h.append('set-cookie', killCookie(OAUTH_COOKIE, secure));
@@ -169,7 +174,7 @@ export async function handleAuth(req, env, url) {
     const h = new Headers({ 'content-type': 'application/json; charset=utf-8' });
     h.append('set-cookie', await sessionCookie(env, email, 1, secure));
     /* 파트너 초대(/join)면 그 주소로 가서 합류하고, 추천(/r)이면 시작 화면으로 */
-    const next = inv.type === 'plan' ? nx : '/auth/start?next=' + encodeURIComponent('/#guide');
+    const next = inv.type === 'plan' ? nx + '?new=1' : '/auth/start?next=' + encodeURIComponent('/#guide');
     return new Response(JSON.stringify({ ok: true, next }), { headers: h });
   }
 

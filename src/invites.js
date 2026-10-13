@@ -86,7 +86,8 @@ export async function handleJoin(req, env, url) {
   ]);
   /* 합류한 사람이 가입하면서 자동으로 받은 빈 계획은 치운다. 뭔가 적어 둔 계획이면 둔다. */
   await dropEmptyOwnPlans(env, u.key, inv.plan_id);
-  return joinPage(url.origin, null, inv.name);
+  /* 막 가입한 파트너면 장부를 열 때 사용 안내 투어를 바로 띄운다 */
+  return joinPage(url.origin, null, inv.name, url.searchParams.get('new') === '1');
 }
 
 export async function liveInvites(env, planId, userKey, origin) {

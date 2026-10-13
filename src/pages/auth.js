@@ -97,11 +97,11 @@ export function startPage(origin, next) {
     startScript(next));
 }
 
-export function joinPage(origin, error, planName) {
+export function joinPage(origin, error, planName, fresh) {
   const nonce = b64(crypto.getRandomValues(new Uint8Array(16)));
   const body = error
     ? '<p class="lead">초대를 쓸 수 없어요</p><p class="who">' + esc(error) + '</p><a class="go" href="/">내 장부로 가기</a>'
-    : '<p class="lead">' + esc(planName) + '에 들어왔어요</p><p class="who">이제 두 분이 같은 장부를 보고 적습니다.</p><a class="go" href="/">장부 열기</a>';
+    : '<p class="lead">' + esc(planName) + '에 들어왔어요</p><p class="who">이제 두 분이 같은 장부를 보고 적습니다.</p><a class="go" href="' + (fresh ? '/#guide' : '/') + '">장부 열기</a>';
   return page(origin, '초대 · ' + SITE, nonce, '<main class="card">' + BRAND + body + '</main>', '', error ? 410 : 200);
 }
 
