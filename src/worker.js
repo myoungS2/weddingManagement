@@ -1283,7 +1283,7 @@ function authPage(origin, kind, email, next, inv, google, notice) {
     kind === 'signup' ? [
       who,
       row('email', '이메일', 'email', 'username', '', true),
-      row('name', '이름', 'text', 'name', '안 써도 됩니다'),
+      row('name', '이름', 'text', 'name', ''),
       row('pw', '비밀번호', 'password', 'new-password', MIN_PW + '자 이상'),
       row('pw2', '비밀번호 다시', 'password', 'new-password')
     ].join('') :
@@ -1291,7 +1291,7 @@ function authPage(origin, kind, email, next, inv, google, notice) {
       '<p class="who">' + esc(email) + '</p>',
       row('pw', '지금 비밀번호', 'password', 'current-password'),
       row('pw2', '새 비밀번호', 'password', 'new-password', MIN_PW + '자 이상'),
-      row('pw3', '새 비밀번호 다시', 'password', 'new-password')
+      row('pw3', '새 비밀번호 재입력', 'password', 'new-password')
     ].join('') : [
       row('email', '이메일', 'email', 'username', '', true),
       row('pw', '비밀번호', 'password', 'current-password')
@@ -1328,8 +1328,8 @@ function inviteOnlyPage(origin, google) {
   const nonce = b64(crypto.getRandomValues(new Uint8Array(16)));
   return page(origin, '시작하기 · ' + SITE, nonce,
     '<main class="card">' + BRAND + '<p class="lead">우리의 결혼 계획 시작하기</p>' +
-      (google ? '<a class="gbtn" href="/auth/google?next=' + encodeURIComponent('/#guide') + '">' + GOOGLE_MARK + '구글로 시작하기</a><div class="or"><span>또는</span></div>' : '') +
-      '<p class="who">이메일과 비밀번호로 시작하려면 파트너의 초대 링크나 친구의 추천 링크가 필요합니다. 구글 계정이면 바로 시작할 수 있어요.</p>' +
+      /* 가입은 구글 버튼 하나. 이메일 가입은 초대·추천 링크로 들어온 사람에게만 따로 열린다. */
+      '<a class="gbtn" href="/auth/google?next=' + encodeURIComponent('/#guide') + '">' + GOOGLE_MARK + '구글로 가입하기</a>' +
       '<p class="alt">이미 계정이 있나요? <a href="/auth/login">로그인</a></p>' +
       '<p class="fine"><a href="/privacy">개인정보처리방침</a> · <a href="/terms">서비스 약관</a><br><span class="by">© 2026 myoung</span></p>' +
     '</main>', '');
