@@ -30,6 +30,15 @@ export async function readOauthCookie(req, env) {
 export function killCookie(name, secure) {
   return name + '=; Path=/auth; Max-Age=0; HttpOnly; SameSite=Lax' + (secure ? '; Secure' : '');
 }
+function tokenErrorMessage(code) {
+  const M = {
+    invalid_client: '구글 로그인 설정(클라이언트 ID·비밀번호)이 맞지 않습니다. 운영자에게 알려 주세요',
+    unauthorized_client: '이 서비스가 구글 로그인을 쓸 수 있도록 설정되지 않았습니다. 운영자에게 알려 주세요',
+    redirect_uri_mismatch: '구글에 이 주소가 등록되지 않았습니다. 운영자에게 알려 주세요',
+    invalid_grant: '로그인이 시간을 넘겼습니다. 다시 해주세요'
+  };
+  return M[code] || ('구글이 로그인을 받아주지 않았습니다' + (code ? ' (' + code + ')' : ''));
+}
 export async function googleClaims(env, url, code, st) {
   const r = await fetch(GOOGLE_TOKEN, {
     method: 'POST',
@@ -39,7 +48,13 @@ export async function googleClaims(env, url, code, st) {
       redirect_uri: redirectUri(url), grant_type: 'authorization_code', code_verifier: st.v
     }).toString()
   });
-  if (!r.ok) throw new Error('구글이 로그인을 받아주지 않았습니다');
+  if (!r.ok) {
+    /* 구글이 거절한 이유(오류 코드)만 남긴다. 코드·토큰·비밀값은 기록하지 않는다. */
+    let e = {};
+    try { e = await r.json(); } catch (x) {}
+    console.error('google token exchange failed', r.status, e.error || '', e.error_description || '');
+    throw new Error(tokenErrorMessage(e.error));
+  }
   const t = await r.json();
   const parts = String(t.id_token || '').split('.');
   if (parts.length !== 3) throw new Error('구글이 보낸 정보를 읽지 못했습니다');
