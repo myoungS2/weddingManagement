@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --local --port 8790",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy -c wrangler.prod.toml",
     "db:local": "wrangler d1 execute wedding-management --local --file=schema.sql",
-    "db:remote": "wrangler d1 execute wedding-management --remote --file=schema.sql",
+    "db:remote": "wrangler d1 execute wedding-management --remote -c wrangler.prod.toml --file=schema.sql",
     "check": "node --check src/worker.js"
   },
   "devDependencies": {

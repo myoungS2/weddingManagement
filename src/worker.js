@@ -13,6 +13,8 @@
 import APP_HTML from "../index.html";
 import LOGO_WEBP from "../assets/logo-doves.webp";
 import WORDMARK_WEBP from "../assets/wordmark-ribbon.webp";
+import OG_PNG from "../assets/og.png";
+import TOUCH_ICON from "../assets/icon-180.png";
 /* 작은 일러스트 8종: 탭 아이콘, 빈 화면, 사용 안내, 메인에 한 장씩 */
 import ART_CAKE from "../assets/art/cake.webp";
 import ART_COUPLE from "../assets/art/couple.webp";
@@ -97,6 +99,9 @@ export default {
       if (path === '/icon.svg' || path === '/favicon.ico') return staticFile(ICON_SVG, 'image/svg+xml; charset=utf-8');
       if (path === '/logo.webp') return staticFile(LOGO_WEBP, 'image/webp');
       if (path === '/wordmark.webp') return staticFile(WORDMARK_WEBP, 'image/webp');
+      /* 주소를 카톡에 보냈을 때 카드에 실리는 그림과 홈 화면 아이콘. 로그인 전에도 열려야 한다. */
+      if (path === '/og.png') return staticFile(OG_PNG, 'image/png');
+      if (path === '/apple-touch-icon.png' || path === '/apple-touch-icon-precomposed.png') return staticFile(TOUCH_ICON, 'image/png');
       const art = path.match(/^\/art\/([a-z0-9]+)\.webp$/);
       if (art && ART[art[1]]) return staticFile(ART[art[1]], 'image/webp');
 
@@ -158,13 +163,18 @@ function pageHead(origin, title, o) {
     '<meta name="author" content="myoung">' +
     '<meta name="copyright" content="© 2026 myoung. All rights reserved.">' +
     '<link rel="icon" href="/icon.svg" type="image/svg+xml">' +
+    '<link rel="apple-touch-icon" href="/apple-touch-icon.png">' +
     '<meta property="og:type" content="website">' +
     '<meta property="og:site_name" content="' + SITE + '">' +
     '<meta property="og:locale" content="ko_KR">' +
     '<meta property="og:title" content="' + esc(t) + '">' +
     '<meta property="og:description" content="' + esc(d) + '">' +
     '<meta property="og:url" content="' + esc(site + (o.path || '/')) + '">' +
-    '<meta property="og:image" content="' + esc(site + '/logo.webp') + '">' +
+    '<meta property="og:image" content="' + esc(site + '/og.png') + '">' +
+    '<meta property="og:image:type" content="image/png">' +
+    '<meta property="og:image:width" content="1200">' +
+    '<meta property="og:image:height" content="630">' +
+    '<meta property="og:image:alt" content="' + SITE + '">' +
     '<meta name="twitter:card" content="summary_large_image">';
 }
 

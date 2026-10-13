@@ -66,20 +66,34 @@ R2 도 로컬에서 디스크에 흉내 내므로 파일 올리기까지 그대�
 
 ## 배포
 
+운영 설정은 git 에 올리지 않는 `wrangler.prod.toml` 에 둔다. `wrangler.toml` 을 복사해서 실제 도메인(`routes`)과 운영 D1 의 `database_id` 만 바꾼 파일이다. 로컬 개발은 그대로 `wrangler.toml` 을 쓴다.
+
 ```bash
-npx wrangler d1 create wedding-management          # database_id 를 wrangler.toml 에 적는다
-npm run db:remote
+cp wrangler.toml wrangler.prod.toml                 # routes 주석 해제 + 도메인, database_id 교체
+npx wrangler d1 create wedding-management           # 나온 database_id 를 wrangler.prod.toml 에
+npm run db:remote                                   # 운영 D1 에 schema.sql 적용
+npm run deploy                                      # wrangler deploy -c wrangler.prod.toml
+openssl rand -base64 48 | npx wrangler secret put SESSION_SECRET -c wrangler.prod.toml
+npx wrangler secret put GOOGLE_CLIENT_ID -c wrangler.prod.toml       # 둘 다 있어야 구글 버튼이 생긴다
+npx wrangler secret put GOOGLE_CLIENT_SECRET -c wrangler.prod.toml   # 리디렉션 URI: https://<도메인>/auth/google/callback
+npx wrangler secret put ADMIN_EMAIL -c wrangler.prod.toml
+npx wrangler secret put CONTACT_EMAIL -c wrangler.prod.toml          # 약관·개인정보 페이지의 연락처
+npx wrangler secret put KAKAO_REST_KEY -c wrangler.prod.toml         # 선택. 없으면 웨딩홀 검색이 자체 마스터만 본다
+```
+
+**파일함(R2)** 은 계정에서 R2 를 켜야 한다(대시보드 › R2, 처음 한 번). 켠 뒤:
+
+```bash
 npx wrangler r2 bucket create wedding-management-files
-npx wrangler secret put SESSION_SECRET             # openssl rand -base64 48
-npx wrangler secret put GOOGLE_CLIENT_ID           # 구글 클라우드 콘솔. 리디렉션 URI: https://<도메인>/auth/google/callback
-npx wrangler secret put GOOGLE_CLIENT_SECRET
-npx wrangler secret put ADMIN_EMAIL
-npx wrangler secret put CONTACT_EMAIL            # 약관·개인정보 페이지의 연락처
-npx wrangler secret put KAKAO_REST_KEY             # 선택. 없으면 웨딩홀 검색이 자체 마스터만 본다
+# wrangler.prod.toml 의 [[r2_buckets]] 세 줄 주석 해제
 npm run deploy
 ```
 
-`wrangler.toml` 의 `routes` 주석을 풀어 도메인을 붙인다. 구글 OAuth 동의 화면은 `/privacy` `/terms` 가 있어야 게시된다(워커가 서빙한다).
+R2 가 없으면 파일 올리기 버튼만 꺼지고 나머지는 그대로 돈다.
+
+**백업**: `.github/workflows/backup.yml` 이 매일 KST 04:00 에 운영 D1 을 내보내 암호화한 파일만 아티팩트로 90일 보관한다. 저장소 Secrets 에 `CLOUDFLARE_API_TOKEN`(D1 Edit), `CLOUDFLARE_ACCOUNT_ID`, `BACKUP_PASSPHRASE` 를 넣으면 돌기 시작하고, 없으면 건너뛴다.
+
+**공유 카드**: 주소를 카톡에 보내면 `assets/og.png`(1200×630)가, 아이폰 홈 화면에는 `assets/icon-180.png` 가 쓰인다.
 
 ## 아직 안 한 것 (다음 순서)
 
