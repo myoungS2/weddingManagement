@@ -89,7 +89,8 @@ export async function handleAuth(req, env, url) {
     const joining = /^\/join\//.test(st.next);
     const to = !r.created ? st.next
       : joining ? st.next + '?new=1'
-      : '/auth/start?next=' + encodeURIComponent(st.next === '/' ? '/#guide' : st.next);
+      /* 직접 가입이나 친구 추천(/r)은 시작 화면을 거쳐 사용 안내로. 추천 기록은 위에서 이미 남겼다 */
+      : '/auth/start?next=' + encodeURIComponent(st.next === '/' || /^\/r\//.test(st.next) ? '/#guide' : st.next);
     const h = new Headers({ location: url.origin + to });
     h.append('set-cookie', await sessionCookie(env, email, r.epoch, secure));
     h.append('set-cookie', killCookie(OAUTH_COOKIE, secure));
