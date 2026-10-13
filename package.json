@@ -7,7 +7,7 @@
     "deploy": "wrangler deploy -c wrangler.prod.toml",
     "db:local": "wrangler d1 execute wedding-management --local --file=schema.sql",
     "db:remote": "wrangler d1 execute wedding-management --remote -c wrangler.prod.toml --file=schema.sql",
-    "check": "node --check src/worker.js"
+    "check": "for f in $(find src public/app/js -name '*.js'); do node --check $f || exit 1; done && echo ok"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

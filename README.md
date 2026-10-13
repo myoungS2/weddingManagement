@@ -13,14 +13,34 @@
 
 ```
 wedding_management/
-├── index.html          앱 전부. 워커가 문자열로 읽어 CSP nonce 를 붙여 내보낸다. <style>·<script> 는 각각 하나만.
-├── src/worker.js       로그인(구글·초대 전용 이메일), 세션, 계획 API, 파일(R2), 관리자, 약관
-├── schema.sql          D1 스키마. 처음 한 번 적용
-├── assets/             로고(logo-doves.webp), 레터링(wordmark-ribbon.webp), 인트로 시안(intro.html)
-├── wrangler.toml       바인딩: DB(D1), FILES(R2)
-├── .dev.vars.example   로컬 환경변수 견본 → .dev.vars 로 복사
-└── package.json        dev / deploy / db:local / db:remote / check
+├── src/                     서버 (Cloudflare Worker)
+│   ├── worker.js            진입점. 주소를 보고 알맞은 처리로 넘긴다
+│   ├── config.js            설정값·통계용 선택지
+│   ├── lib/                 http.js(응답·헤더·쿠키) · crypto.js(비밀번호·서명·base64)
+│   ├── auth/                session.js · rate.js(시도 제한) · google.js · routes.js(/auth/*)
+│   ├── plan.js · files.js · invites.js     결혼 계획 · 파일 메타데이터 · 초대(/join, /r)
+│   ├── api/                 index.js(나눠 보내기) · plan · items · files · ref · fx · venues
+│   ├── admin.js             관리자 API
+│   ├── pages/               서버가 그리는 화면: head · styles · auth · legal · landing · app
+│   └── app.html             로그인한 사람에게 나가는 앱 뼈대(마크업만)
+├── public/                  정적 파일. 같은 주소의 파일이 있으면 워커를 거치지 않고 바로 나간다
+│   ├── app/css/             base · components · views · overlays
+│   ├── app/js/              화면 모듈 (ES modules, 빌드 없음)
+│   │   ├── main.js          시작점: 이벤트 연결 → 그리기 → 서버 연결
+│   │   ├── constants · state · util · store · render
+│   │   ├── views/           home · budget · plan · trip · more · guest(숨김)
+│   │   └── sheet · files · viewer · export · importers · events · guide
+│   ├── art/                 일러스트 23종
+│   ├── logo.webp · wordmark.webp · og.png · apple-touch-icon.png · icon.svg
+│   └── _headers             정적 파일 보안 헤더, 화면 JS·CSS 는 no-cache
+├── design/                  서빙하지 않는 원본: 인트로 시안, 크림 배경 로고
+├── schema.sql               D1 스키마
+├── wrangler.toml            로컬 개발 설정. 운영은 git 에 없는 wrangler.prod.toml
+└── .github/workflows/       매일 D1 암호화 백업
 ```
+
+화면은 빌드 단계가 없다. `public/app/js/` 의 파일을 고치면 그대로 나간다.
+서버는 `wrangler` 가 배포할 때 `src/` 를 묶는다. `npm run check` 로 전체 문법을 검사한다.
 
 ## 데이터 모양
 

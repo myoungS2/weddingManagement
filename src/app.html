@@ -1,0 +1,29 @@
+<!-- Wedding Management · © 2026 myoung. All rights reserved. 로그인한 사람에게만 나가는 앱 뼈대. 화면 JS 는 public/app/js/ -->
+<div class="app">
+  <nav class="tabs" id="tabs" aria-label="메뉴">
+    <div class="brand"><img src="/wordmark.webp?v=5" alt="Wedding Management"></div>
+    <button data-view="home" aria-current="page"><img src="/art/flowers.webp" alt=""><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
+    <button data-view="budget"><img src="/art/rings.webp" alt=""><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>예산</button>
+    <button data-view="plan"><img src="/art/cake.webp" alt=""><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>일정</button>
+    <!-- 하객 탭은 2026-10-07 요청으로 숨김. renderGuest 는 남아 있어 data-view="guest" 버튼만 되살리면 된다. -->
+    <button data-view="trip"><img src="/art/glasses.webp" alt=""><svg viewBox="0 0 24 24"><path d="M10.5 13.5 4 11l1.5-1.5 6.5 1.2 4.3-4.3a1.8 1.8 0 0 1 2.5 2.5L14.5 13l1.2 6.5L14.2 21l-2.5-6.5-3 3 .3 2.5-1.3 1.3-1.5-3.5L2.7 16.3 4 15l2.5.3z"/></svg>여행</button>
+    <button data-view="more"><img src="/art/bow.webp" alt=""><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더보기</button>
+    <div class="spacer"></div>
+    <div class="me" id="me"></div>
+    <div class="by">© 2026 myoung</div>
+  </nav>
+  <main id="view"></main>
+</div>
+<div id="scrim" hidden></div>
+<section id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="hd"><h3 id="sheetTitle"></h3><button class="x" id="sheetClose" aria-label="닫기">×</button></div>
+  <div class="bd" id="sheetBody"></div>
+  <div class="ft" id="sheetFoot"></div>
+</section>
+<div id="show" hidden></div>
+<div id="intro" hidden><div class="st"><img class="w" src="/wordmark.webp?v=5" alt=""><img class="l" src="/logo.webp?v=5" alt=""></div></div>
+<div id="guide" hidden role="dialog" aria-modal="true" aria-label="사용 안내"></div>
+<div id="helper" hidden></div>
+<div id="toast" role="status"></div>
+<input type="file" id="fileInput" hidden>
+<script type="module" src="/app/js/main.js"></script>

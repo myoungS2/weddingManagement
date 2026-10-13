@@ -1,0 +1,63 @@
+/* Wedding Management · © 2026 myoung. All rights reserved.
+ * 색·글꼴 토큰, 기본값, 셸(하단 탭·사이드바). */
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* 팔레트는 로고에서: 크림 종이 위에 리본 핑크. 장식(블러·그레인·그라디언트 덩어리)은 쓰지 않고
+   둥근 모서리, 연한 핑크 면, 따뜻한 회색 선으로 분위기를 낸다. 숫자는 고정폭. 매일 열어 금액을 적는 도구. */
+:root{
+  --bg:#FBF7F0;--bg2:#F6EFE6;--surface:#FFFFFF;--ink:#3A2A2E;--ink2:#5E4A50;--muted:#9C868C;--line:#F0E4E2;--line2:#E3CFD0;
+  --pink:#E8536F;--pink2:#F4A0B0;--pink-ink:#C23A55;--pink-soft:#FDECEF;--pink-mist:#FBF1F2;
+  --good:#3C8A5E;--good-soft:#E8F4EC;--warn:#B8740A;--warn-soft:#FFF3DF;--bad:#B3261E;--bad-soft:#FBE9E8;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  --r:14px;--rs:9px;--nav:66px;--shadow:0 1px 2px rgba(120,60,70,.05),0 6px 20px -14px rgba(232,83,111,.25);
+  color-scheme:light}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;padding-top:env(safe-area-inset-top,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+a{color:var(--pink-ink)}
+:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+[hidden]{display:none!important}
+h1,h2,h3,h4,p{margin:0}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* ── 셸: 모바일은 하단 탭, 넓은 화면은 왼쪽 사이드바 ── */
+.app{min-height:100%;display:flex;flex-direction:column}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding:6px 6px env(safe-area-inset-bottom,0px);
+  background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -6px 24px -18px rgba(120,60,70,.35);display:flex;gap:4px;z-index:20}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;color:var(--muted);font-weight:500;border-radius:12px;transition:background .15s,color .15s;min-width:0;padding:0 2px}
+nav.tabs button svg{display:none}
+nav.tabs button img{width:30px;height:30px;object-fit:contain;filter:grayscale(1) opacity(.55);transition:filter .15s,transform .15s}
+nav.tabs button[aria-current="page"]{color:var(--pink-ink);background:var(--pink-soft);font-weight:600}
+nav.tabs button[aria-current="page"] img{filter:none;transform:scale(1.08)}
+nav.tabs .brand,nav.tabs .spacer,nav.tabs .me,nav.tabs .by{display:none}
+main{flex:1;padding:16px 16px calc(var(--nav) + 24px + env(safe-area-inset-bottom,0px));max-width:1080px;width:100%;margin:0 auto;min-width:0}
+/* 좁은 화면에서는 사이드바가 없어 브랜드가 사라진다. 상단에 워드마크 띠 하나. 누르면 인트로를 다시 본다. */
+.mbrand{display:flex;align-items:center;justify-content:space-between;padding:4px 0 14px}
+.mbrand img{height:30px;width:auto;display:block}
+@media (min-width:900px){.mbrand{display:none}}
+header.ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+header.ph h1{font-size:22px;font-weight:700;letter-spacing:-.02em}
+header.ph .sub{font-size:12px;color:var(--muted)}
+.segs{display:inline-flex;background:var(--bg2);border-radius:999px;padding:3px;gap:2px}
+.segs button{padding:6px 13px;font-size:13px;color:var(--muted);font-weight:500;border-radius:999px;white-space:nowrap;transition:background .15s,color .15s}
+.segs button[aria-pressed="true"]{background:var(--surface);color:var(--pink-ink);font-weight:600;box-shadow:var(--shadow)}
+@media (min-width:900px){
+  .app{flex-direction:row}
+  nav.tabs{position:sticky;top:0;bottom:auto;height:100vh;width:212px;flex-direction:column;border-top:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;background:var(--bg);padding:22px 12px;gap:3px;flex-shrink:0}
+  nav.tabs .brand,nav.tabs .spacer,nav.tabs .me,nav.tabs .by{display:block}
+  nav.tabs .by{font-size:10.5px;color:var(--muted);padding:2px 12px 0;opacity:.7;letter-spacing:.04em}
+  nav.tabs .brand{padding:4px 10px 18px}
+  nav.tabs .brand img{width:120px;height:auto;display:block}
+  nav.tabs button{flex:0 0 auto;flex-direction:row;justify-content:flex-start;gap:11px;font-size:14px;padding:8px 12px;border-radius:12px}
+  nav.tabs button img{width:34px;height:34px}
+  nav.tabs button:hover{background:var(--pink-mist)}
+  nav.tabs button[aria-current="page"]{background:var(--surface);box-shadow:var(--shadow)}
+  nav.tabs .spacer{flex:1}
+  nav.tabs .me{font-size:12px;color:var(--muted);padding:8px 10px;word-break:break-all}
+  main{padding:28px 32px 48px}
+}
+
