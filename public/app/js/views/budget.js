@@ -58,7 +58,7 @@ export function openVendor(id, catId){
   const body = () => {
     const pays = state.payments.filter(p=>p.vendorId===v.id).sort((a,b)=>(a.dueDate||'9').localeCompare(b.dueDate||'9'));
     const fs = filesOf('vendor', v.id);
-    return '<div class="field"><label>업체 이름</label><input id="f-name" value="'+esc(draft.name)+'" placeholder="예: ○○ 스튜디오"></div>' +
+    return '<div class="field"><label>업체 이름</label><input id="f-name" value="'+esc(draft.name)+'" placeholder="'+(draft.category==='venue'?'웨딩홀 이름 검색':'예: ○○ 스튜디오')+'" autocomplete="off">'+(draft.category==='venue'?'<div id="f-venueList"></div>':'')+'</div>' +
     '<div class="grid2"><div class="field"><label>카테고리</label><select id="f-cat">'+state.categories.map(c=>'<option value="'+c.id+'"'+(c.id===draft.category?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>' +
     '<div class="field"><label>상태</label><select id="f-status">'+Object.keys(STATUS).map(k=>'<option value="'+k+'"'+(k===draft.status?' selected':'')+'>'+STATUS[k]+'</option>').join('')+'</select></div></div>' +
     '<div class="field"><label>금액 <span class="segs" style="margin-left:8px;vertical-align:middle"><button type="button" data-mode="direct" aria-pressed="'+(draft.amountMode!=='formula')+'">직접 입력</button><button type="button" data-mode="formula" aria-pressed="'+(draft.amountMode==='formula')+'">단가 × 수량</button></span></label>' +
@@ -131,10 +131,11 @@ export function openVendor(id, catId){
   openSheet(isNew ? '새 업체' : v.name, body, [
     isNew ? null : { label:'삭제', cls:'danger', onClick:(b)=>{ if (!arm(b)) return; closeSheet(); store.del('vendors', v.id); toast('지웠습니다'); } },
     { label:'저장', cls:'primary', onClick:()=>{ sync(); if (!draft.name) { toast('업체 이름을 적어 주세요'); return; } closeSheet(); store.put('vendors', draft);
-      if (draft.category==='venue' && draft.status==='contracted' && !(state.settings.venue && state.settings.venue.name)) { store.settingsPatch({ venue:{ name:draft.name, fromVendor:draft.id } }, true); toast('설정의 웨딩홀도 '+draft.name+'(으)로 채웠어요'); } if (isNew) { toast('저장됨. 이어서 결제를 적을 수 있어요'); setTimeout(()=>openVendor(draft.id), 150); } else toast('저장됨'); } }
+      if (draft.category==='venue' && draft.status==='contracted' && !(state.settings.venue && state.settings.venue.name)) { store.settingsPatch({ venue:Object.assign({ name:draft.name, fromVendor:draft.id }, draft.venueId?{ id:draft.venueId }:{}) }, true); toast('설정의 웨딩홀도 '+draft.name+'(으)로 채웠어요'); } if (isNew) { toast('저장됨. 이어서 결제를 적을 수 있어요'); setTimeout(()=>openVendor(draft.id), 150); } else toast('저장됨'); } }
   ], {
     click(e){
-      const t = e.target.closest('[data-mode],#addPay,#addQ,#addX,#addLink,#addTrip,[data-tconv],[data-deltrip],[data-delpay],[data-delq],[data-delx],[data-dellink],[data-copylink]'); if (!t) return;
+      const t = e.target.closest('[data-vpick],[data-mode],#addPay,#addQ,#addX,#addLink,#addTrip,[data-tconv],[data-deltrip],[data-delpay],[data-delq],[data-delx],[data-dellink],[data-copylink]'); if (!t) return;
+      if (t.dataset.vpick) { pickVenueFor(JSON.parse(t.dataset.vpick)); return; }
       if (t.dataset.copylink) { navigator.clipboard.writeText(t.dataset.copylink).then(()=>toast('복사했습니다')).catch(()=>toast('복사하지 못했습니다')); return; }
       sync();
       if (t.dataset.tconv) {
@@ -164,6 +165,18 @@ export function openVendor(id, catId){
       if (t.dataset.qa) { sync(); const q=(draft.questions||[]).find(x=>x.id===t.dataset.qa); if (q) { q.a=t.value; store.put('vendors', draft); } }
     }
   });
+  /* 예식장 이름 칸에서 웨딩홀을 골랐다. 카카오 결과면 우리 목록에도 남겨 표기를 맞추고, 지도 링크를 붙인다. */
+  async function pickVenueFor(p){
+    try {
+      let picked = p;
+      if (p.kakaoId) { const r = await store.call('POST','/api/venues',{ kakaoId:p.kakaoId, name:p.name, placeUrl:p.placeUrl, region:state.settings.region||'' }); picked = r.venue; }
+      sync(); draft.name = picked.name; draft.venueId = picked.id;
+      const url = picked.placeUrl || p.placeUrl;
+      if (url && !(draft.links||[]).some(l=>l.url===url)) (draft.links=draft.links||[]).push({ id:uid(), title:'카카오맵', url });
+      if (!isNew) store.put('vendors', draft);
+      repaint(); toast(picked.name+'(으)로 골랐습니다');
+    } catch(err){ toast(err.message); }
+  }
   function repaint(){ const sc = $('#sheetBody').scrollTop; $('#sheetBody').innerHTML = body(); $('#sheetBody').scrollTop = sc; }
 }
 

@@ -21,11 +21,34 @@ export async function pickVenue(v){
   try { let picked = v;
     if (v.kakaoId) { const r = await store.call('POST','/api/venues',{ kakaoId:v.kakaoId, name:v.name, placeUrl:v.placeUrl, region:$('#st-region').value, hall:$('#st-hall').value }); picked = r.venue; }
     state.settings.venue = { id:picked.id, name:picked.name, hall:$('#st-hall').value.trim()||picked.hall||'', status:picked.status }; $('#st-venue').value = picked.name; $('#venueList').innerHTML='';
-    await store.settingsPatch({ venue: state.settings.venue }, true); toast('웨딩홀을 골랐습니다');
+    const msg = venueToBudget(picked.name, picked.placeUrl||v.placeUrl);
+    state.settings.venue.fromVendor = msg.id;
+    await store.settingsPatch({ venue: state.settings.venue }, true); toast(msg.text); return msg.text;
   } catch(err){ toast(err.message); }
 }
+/* 설정에서 고른 웨딩홀을 예산의 예식장 업체로 잇는다.
+ * 같은 이름이 이미 있으면 그걸 쓰고, 예전에 여기서 만든 업체가 아직 빈 채면 이름만 바꾸고, 아니면 새로 만든다. */
+const vkey = s => String(s||'').replace(/\s+/g,'').toLowerCase();
+function venueToBudget(name, placeUrl){
+  const venues = state.vendors.filter(x=>x.category==='venue' && x.status!=='dropped');
+  const same = venues.find(x=>vkey(x.name)===vkey(name));
+  if (same) {
+    if (same.status!=='contracted' && !venues.some(x=>x.status==='contracted')) store.put('vendors', Object.assign({}, same, { status:'contracted' }));
+    return { id:same.id, text:'예산의 예식장 '+same.name+'과(와) 연결했습니다' };
+  }
+  const link = placeUrl ? [{ id:uid(), title:'카카오맵', url:placeUrl }] : [];
+  const mine = venues.find(x=>x.fromSettings && !num(x.amount) && !state.payments.some(p=>p.vendorId===x.id));
+  if (mine) {
+    store.put('vendors', Object.assign({}, mine, { name, links:link.concat((mine.links||[]).filter(l=>l.title!=='카카오맵')) }));
+    return { id:mine.id, text:'예산의 예식장을 '+name+'(으)로 바꿨습니다' };
+  }
+  const v = { id:uid(), name, category:'venue', status:venues.some(x=>x.status==='contracted')?'candidate':'contracted', amountMode:'direct', amount:'', unitPrice:'', qty:'', extra:'',
+    payer:'both', contact:{name:'',phone:''}, memo:'', links:link, questions:[], extras:[], trips:[], createdAt:today(), fromSettings:true };
+  store.put('vendors', v);
+  return { id:v.id, text:'예산 → 예식장에 '+name+'을(를) 넣었습니다' };
+}
 export async function requestVenue(){
-  try { const r = await store.call('POST','/api/venues',{ name:$('#st-venue').value.trim(), region:$('#st-region').value, hall:$('#st-hall').value }); await pickVenue(r.venue); toast('등록을 요청했습니다. 바로 쓸 수 있고, 관리자가 검수합니다'); } catch(err){ toast(err.message); }
+  try { const r = await store.call('POST','/api/venues',{ name:$('#st-venue').value.trim(), region:$('#st-region').value, hall:$('#st-hall').value }); const m = await pickVenue(r.venue); toast('등록을 요청했습니다. 관리자가 검수합니다'+(m?' · '+m:'')); } catch(err){ toast(err.message); }
 }
 /* 이벤트 연결. main.js 가 한 번 부른다. */
 export function init() {
@@ -122,15 +145,20 @@ export function init() {
   document.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.money !== undefined) moneyFormat(e.target);
     if (e.target.id==='fx-amt') { const cur=$('#hm-cur').value, k=toKrw(e.target.value, cur); $('#fx-out').textContent = '= '+(k==null?'?':won(k))+'원'; return; }
-    if (e.target.id!=='st-venue') return;
+    /* 웨딩홀 검색: 설정의 웨딩홀 칸, 그리고 예산에서 예식장 업체 이름 칸 */
+    const inBudget = e.target.id==='f-name' && $('#f-cat') && $('#f-cat').value==='venue';
+    if (e.target.id!=='st-venue' && !inBudget) return;
+    const box = inBudget ? '#f-venueList' : '#venueList', attr = inBudget ? 'data-vpick' : 'data-pickvenue';
     const q = e.target.value.trim(); clearTimeout(venueTimer);
-    if (state.settings.venue && state.settings.venue.id) { state.settings.venue = {}; }
-    if (q.length < 1 || state.mode!=='api') { $('#venueList').innerHTML=''; return; }
+    if (!inBudget && state.settings.venue && state.settings.venue.id) { state.settings.venue = {}; }
+    if (q.length < 1 || state.mode!=='api') { $(box).innerHTML=''; return; }
     venueTimer = setTimeout(async () => {
       try { const r = await store.call('GET','/api/venues?q='+encodeURIComponent(q));
-        const li = [...r.items.map(v=>'<div class="it" data-pickvenue=\''+esc(JSON.stringify({id:v.id,name:v.name,hall:v.hall,status:v.status}))+'\' style="cursor:pointer"><div class="t"><b>'+esc(v.name)+'</b><small>'+esc(v.region||'')+' '+esc(v.hall||'')+(v.status==='pending'?' · 검수 대기':'')+'</small></div></div>'),
-          ...r.kakao.map(k=>'<div class="it" data-pickvenue=\''+esc(JSON.stringify({kakaoId:k.kakaoId,name:k.name,placeUrl:k.placeUrl}))+'\' style="cursor:pointer"><div class="t"><b>'+esc(k.name)+'</b><small>'+esc(k.address||'')+' · 카카오</small></div></div>')];
-        $('#venueList').innerHTML = '<div class="list card" style="padding:0 12px;margin-top:4px">'+(li.join('')||'<p class="muted small" style="padding:8px 0">검색 결과가 없습니다.</p>')+'<div class="it" data-reqvenue style="cursor:pointer;color:var(--pink-ink)">+ "'+esc(q)+'" 직접 등록 요청</div></div>';
+        if (e.target.value.trim()!==q || !$(box)) return;   // 그 사이 더 쳤거나 시트를 닫았다
+        const li = [...r.items.map(v=>'<div class="it" '+attr+'=\''+esc(JSON.stringify({id:v.id,name:v.name,hall:v.hall,status:v.status,placeUrl:v.placeUrl}))+'\' style="cursor:pointer"><div class="t"><b>'+esc(v.name)+'</b><small>'+esc(v.region||'')+' '+esc(v.hall||'')+(v.status==='pending'?' · 검수 대기':'')+'</small></div></div>'),
+          ...r.kakao.map(k=>'<div class="it" '+attr+'=\''+esc(JSON.stringify({kakaoId:k.kakaoId,name:k.name,placeUrl:k.placeUrl}))+'\' style="cursor:pointer"><div class="t"><b>'+esc(k.name)+'</b><small>'+esc(k.address||'')+' · 카카오</small></div></div>')];
+        $(box).innerHTML = '<div class="list card" style="padding:0 12px;margin-top:4px">'+(li.join('')||'<p class="muted small" style="padding:8px 0">검색 결과가 없습니다.'+(inBudget?' 적은 이름 그대로 저장해도 됩니다.':'')+'</p>') +
+          (inBudget ? '' : '<div class="it" data-reqvenue style="cursor:pointer;color:var(--pink-ink)">+ "'+esc(q)+'" 직접 등록 요청</div>')+'</div>';
       } catch(err){ toast(err.message); }
     }, 250);
   });
