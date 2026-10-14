@@ -46,11 +46,15 @@ export async function createPlan(env, ownerKey, name) {
   return { id, name, owner: ownerKey, role: 'owner', tier: 'free', settings: {} };
 }
 
-export async function myPlans(env, key) {
-  const r = await env.DB.prepare(
+/* 쿼리는 "문장 만들기"와 "줄 다듬기"로 나눠 둔다. /api/state 가 여러 문장을 DB.batch 로 한 번에 보내기 위해서. */
+export function myPlansStmt(env, key) {
+  return env.DB.prepare(
     'SELECT p.id, p.name, m.role, (SELECT COUNT(*) FROM plan_members x WHERE x.plan_id = p.id) AS people ' +
     'FROM plan_members m JOIN plans p ON p.id = m.plan_id WHERE m.user_key = ? ORDER BY m.joined_at'
-  ).bind(key).all();
+  ).bind(key);
+}
+export async function myPlans(env, key) {
+  const r = await myPlansStmt(env, key).all();
   return r.results || [];
 }
 
@@ -92,9 +96,13 @@ export async function dropPlan(env, id) {
   await env.DB.batch(stmts);
 }
 
-export async function members(env, pid) {
-  const r = await env.DB.prepare(
+export function membersStmt(env, pid) {
+  return env.DB.prepare(
     'SELECT m.user_key AS email, m.role, m.joined_at, u.name FROM plan_members m LEFT JOIN users u ON u.email = m.user_key WHERE m.plan_id = ? ORDER BY m.joined_at'
-  ).bind(pid).all();
-  return (r.results || []).map(x => ({ email: x.email, name: x.name || x.email.split('@')[0], role: x.role }));
+  ).bind(pid);
+}
+export const memberRow = x => ({ email: x.email, name: x.name || x.email.split('@')[0], role: x.role });
+export async function members(env, pid) {
+  const r = await membersStmt(env, pid).all();
+  return (r.results || []).map(memberRow);
 }

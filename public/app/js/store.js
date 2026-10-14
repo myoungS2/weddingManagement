@@ -5,33 +5,46 @@ import { render } from './render.js';
 import { COLS, state } from './state.js';
 import { $, toast } from './util.js';
 
+const SNAP = LS + ':snap';   // 서버 모드에서 마지막으로 받은 /api/state 응답
 /* ═══ 저장소: 서버가 있으면 API, 없으면 브라우저 ═══ */
 export const store = {
   loadLocal(){ try { const d = JSON.parse(localStorage.getItem(LS)||'null'); if (d) { for (const k of [...COLS,'settings','refTags','refFileTags','refLikes','categories']) if (d[k]) state[k]=d[k]; } } catch(e){} },
   saveLocal(){ if (state.mode!=='local') return; try { const d={}; for (const k of [...COLS,'settings','refTags','refFileTags','refLikes','categories']) d[k]=state[k]; localStorage.setItem(LS, JSON.stringify(d)); } catch(e){} },
+  /* 서버 모드: 마지막으로 받은 상태를 브라우저에 남겨 두고(SNAP), 다음에 열 때 그걸 먼저 그린 뒤 새로 받는다.
+   * 엣지가 멀면 첫 응답까지 몇 초가 걸리는데, 그동안 빈 화면 대신 지난 데이터를 보여 주기 위해서. */
+  loadSnap(){ try { const s = JSON.parse(localStorage.getItem(SNAP)||'null'); if (s && s.me && s.plan) { this.applyMe(s.me); this.applyState(s); } } catch(e){} },
+  saveSnap(s){ try { localStorage.setItem(SNAP, JSON.stringify(s)); } catch(e){} },
+  dropSnap(){ try { localStorage.removeItem(SNAP); } catch(e){} },
+  applyMe(me){ state.mode='api'; state.user=me; state.admin=!!me.admin; state.filesOn=!!me.files; state.kakao=!!me.kakao; },
+  applyState(s){
+    state.plan=s.plan; state.settings=s.plan.settings||{}; state.members=s.members||[]; state.invites=s.invites||[];
+    for (const k of COLS) state[k]=s[k]||[];
+    state.files=s.files||[]; state.refTags=s.refTags||[]; state.refFileTags=s.refFileTags||[]; state.refLikes=s.refLikes||[];
+    state.categories=s.categories||[]; state.usage=s.usage||0; state.quota=s.quota||0;
+    state.loading=false; render();
+  },
+  /* 서버가 있으면 /api/state 한 번으로 사용자 정보(me)와 데이터를 같이 받는다. 없거나 실패하면 브라우저 저장 모드. */
   async connect(){
     try {
-      const r = await fetch('/api/me', { credentials:'same-origin', headers:{accept:'application/json'} });
-      if (r.status===401) { const j = await r.json().catch(()=>null); if (j && j.login) { location.href=j.login; return; } }
+      const r = await fetch('/api/state', { credentials:'same-origin', headers:{accept:'application/json'} });
+      if (r.status===401) { this.dropSnap(); const j = await r.json().catch(()=>null); location.href = (j && j.login) || '/auth/login'; return; }
       if (r.ok && /json/.test(r.headers.get('content-type')||'')) {
-        const me = await r.json();
-        state.mode='api'; state.user=me; state.admin=!!me.admin; state.filesOn=!!me.files; state.kakao=!!me.kakao;
+        const s = await r.json();
+        this.applyMe(s.me||{});
         try { localStorage.removeItem(LS); } catch(e){}
-        await this.pull();
+        this.applyState(s); this.saveSnap(s);
         addEventListener('focus', ()=>{ if (!$('#sheet').hidden) return; this.pull().catch(()=>{}); });
         return;
       }
     } catch(e){}
+    if (state.mode==='api') { toast('서버에 닿지 못해 마지막으로 받은 내용을 보여 줍니다'); return; }   // 지난 상태를 이미 그렸으면 그대로 둔다
     if (!state.categories.length) state.categories = [['venue','예식장'],['planner','플래너'],['studio','스튜디오'],['dress','드레스'],['makeup','헤어/메이크업'],['snap','스냅/영상'],['ceremony','본식'],['ring','예물(반지)'],['suit','예복'],['parents','혼주'],['invitation','청첩장/답례품'],['gathering','청첩장 모임'],['honeymoon','신혼여행'],['etc','기타']].map(([id,name],i)=>({id,name,sort:i}));
     state.loading=false; render();
   },
   async pull(){
     const s = await this.call('GET','/api/state');
-    state.plan=s.plan; state.settings=s.plan.settings||{}; state.members=s.members; state.invites=s.invites;
-    for (const k of COLS) state[k]=s[k]||[];
-    state.files=s.files||[]; state.refTags=s.refTags||[]; state.refFileTags=s.refFileTags||[]; state.refLikes=s.refLikes||[];
-    state.categories=s.categories||[]; state.usage=s.usage||0; state.quota=s.quota||0;
-    state.loading=false; render();
+    if (s.me) this.applyMe(s.me);
+    this.applyState(s); this.saveSnap(s);
   },
   async call(method, path, body, raw){
     const o = { method, credentials:'same-origin', headers:{} };

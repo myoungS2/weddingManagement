@@ -100,7 +100,7 @@ export function init() {
       case 'useVenue': { const cv=contractedVenue(); if (!cv) return; $('#st-venue').value=cv.name; state.settings.venue={ name:cv.name, fromVendor:cv.id, hall:$('#st-hall').value.trim() }; return store.settingsPatch({ venue: state.settings.venue }); }
       case 'addCat': { try { await store.call('POST','/api/admin/categories',{id:$('#c-id').value, name:$('#c-name').value}); await store.pull(); } catch(err){ toast(err.message); } return; }
       case 'replayIntro': return playIntro(true);
-      case 'logout': { await fetch('/auth/logout',{method:'POST',credentials:'same-origin'}); try { localStorage.removeItem(LS); } catch(err){} location.href='/auth/login'; return; }
+      case 'logout': { await fetch('/auth/logout',{method:'POST',credentials:'same-origin'}); try { localStorage.removeItem(LS); } catch(err){} store.dropSnap(); location.href='/auth/login'; return; }
     }
   });
   document.addEventListener('change', e => {

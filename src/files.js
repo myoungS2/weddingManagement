@@ -2,13 +2,18 @@
  * Wedding Management · © 2026 myoung. All rights reserved.
  * 파일함 메타데이터 (본체는 R2).
  */
-export async function listFiles(env, pid) {
-  const r = await env.DB.prepare(
+export function listFilesStmt(env, pid) {
+  return env.DB.prepare(
     'SELECT id, owner_type AS owner, owner_id AS ownerId, kind, name, size, content_type AS type, memo, who, created_by AS by, created_at AS at ' +
     'FROM files WHERE plan_id = ? ORDER BY created_at DESC'
-  ).bind(pid).all();
-  return (r.results || []).map(x => Object.assign(x, { url: '/file/' + x.id }));
+  ).bind(pid);
 }
+export const fileRowOut = x => Object.assign(x, { url: '/file/' + x.id });
+export async function listFiles(env, pid) {
+  const r = await listFilesStmt(env, pid).all();
+  return (r.results || []).map(fileRowOut);
+}
+export function usageStmt(env, pid) { return env.DB.prepare('SELECT COALESCE(SUM(size),0) AS n FROM files WHERE plan_id = ?').bind(pid); }
 export async function fileRow(env, pid, id) {
   const x = await env.DB.prepare(
     'SELECT id, owner_type AS owner, owner_id AS ownerId, kind, name, size, content_type AS type, memo, who, created_by AS by, created_at AS at FROM files WHERE id = ? AND plan_id = ?'
@@ -16,7 +21,7 @@ export async function fileRow(env, pid, id) {
   return x ? Object.assign(x, { url: '/file/' + x.id }) : null;
 }
 export async function usageOf(env, pid) {
-  const r = await env.DB.prepare('SELECT COALESCE(SUM(size),0) AS n FROM files WHERE plan_id = ?').bind(pid).first();
+  const r = await usageStmt(env, pid).first();
   return Number(r.n) || 0;
 }
 export async function deleteFiles(env, pid, ids) {

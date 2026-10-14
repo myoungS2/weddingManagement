@@ -2,30 +2,47 @@
  * Wedding Management · © 2026 myoung. All rights reserved.
  * 상태 한 번에 받기 · 계획 설정 · 함께하기(초대·나가기·전환·삭제).
  */
-import { COLLECTIONS, INVITE_DAYS, MAX_MEMBERS } from '../config.js';
-import { listFiles, usageOf } from '../files.js';
-import { liveInvites } from '../invites.js';
+import { isAdmin } from '../auth/session.js';
+import { COLLECTIONS, INVITE_DAYS, MAX_FILE, MAX_MEMBERS } from '../config.js';
+import { fileRowOut, listFilesStmt, usageStmt } from '../files.js';
+import { inviteRow, liveInvites, liveInvitesStmt } from '../invites.js';
 import { b64 } from '../lib/crypto.js';
 import { json, nowIso, safeParse } from '../lib/http.js';
-import { dropPlan, members, patchPlan, quotaOf } from '../plan.js';
+import { dropPlan, memberRow, membersStmt, myPlansStmt, patchPlan, quotaOf } from '../plan.js';
 
 export async function handlePlanApi(req, env, url, u) {
   const path = url.pathname, method = req.method;
   const pid = u.plan.id, uk = u.key;
 
+  /* 앱이 처음 뜰 때 한 번에 받는 것. 엣지와 D1 사이가 멀면 쿼리마다 왕복이 비싸므로
+   * 서로 독립인 쿼리는 전부 DB.batch 로 한 번에 보낸다. 사용자 정보(me)도 같이 실어 /api/me 왕복을 없앤다. */
   if (path === '/api/state' && method === 'GET') {
-    const out = { plan: u.plan, members: await members(env, pid), invites: await liveInvites(env, pid, uk, url.origin) };
-    for (const col of COLLECTIONS) {
-      const r = await env.DB.prepare('SELECT data FROM ' + col + ' WHERE plan_id = ?').bind(pid).all();
-      out[col] = (r.results || []).map(x => safeParse(x.data)).filter(Boolean);
-    }
-    out.files = await listFiles(env, pid);
-    out.refTags = ((await env.DB.prepare('SELECT id, name, sort FROM ref_tags WHERE plan_id = ? ORDER BY sort, name').bind(pid).all()).results) || [];
-    out.refFileTags = ((await env.DB.prepare('SELECT file_id AS fileId, tag_id AS tagId FROM ref_file_tags WHERE plan_id = ?').bind(pid).all()).results) || [];
-    out.refLikes = ((await env.DB.prepare('SELECT file_id AS fileId, user_key AS who FROM ref_likes WHERE plan_id = ?').bind(pid).all()).results) || [];
-    out.categories = ((await env.DB.prepare('SELECT id, name, sort FROM categories ORDER BY sort').all()).results) || [];
-    out.usage = await usageOf(env, pid);
+    const rows = r => (r && r.results) || [];
+    const q = [
+      membersStmt(env, pid),
+      liveInvitesStmt(env, pid, uk),
+      ...COLLECTIONS.map(col => env.DB.prepare('SELECT data FROM ' + col + ' WHERE plan_id = ?').bind(pid)),
+      listFilesStmt(env, pid),
+      env.DB.prepare('SELECT id, name, sort FROM ref_tags WHERE plan_id = ? ORDER BY sort, name').bind(pid),
+      env.DB.prepare('SELECT file_id AS fileId, tag_id AS tagId FROM ref_file_tags WHERE plan_id = ?').bind(pid),
+      env.DB.prepare('SELECT file_id AS fileId, user_key AS who FROM ref_likes WHERE plan_id = ?').bind(pid),
+      env.DB.prepare('SELECT id, name, sort FROM categories ORDER BY sort'),
+      usageStmt(env, pid),
+      myPlansStmt(env, uk)
+    ];
+    const rs = await env.DB.batch(q);
+    let i = 0;
+    const out = { plan: u.plan, members: rows(rs[i++]).map(memberRow), invites: rows(rs[i++]).map(inviteRow(url.origin)) };
+    for (const col of COLLECTIONS) out[col] = rows(rs[i++]).map(x => safeParse(x.data)).filter(Boolean);
+    out.files = rows(rs[i++]).map(fileRowOut);
+    out.refTags = rows(rs[i++]); out.refFileTags = rows(rs[i++]); out.refLikes = rows(rs[i++]); out.categories = rows(rs[i++]);
+    out.usage = Number((rows(rs[i++])[0] || {}).n) || 0;
     out.quota = quotaOf(u.plan);
+    out.me = {
+      email: u.email, name: u.name, admin: isAdmin(env, u),
+      plan: u.plan, plans: rows(rs[i++]),
+      files: !!env.FILES, fileMax: MAX_FILE, quota: out.quota, kakao: !!env.KAKAO_REST_KEY
+    };
     return json(out);
   }
 

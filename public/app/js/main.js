@@ -19,5 +19,6 @@ playIntro(false);
 maybeGuide();
 try { console.info('%cWedding Management%c  © 2026 myoung · 무단 사용 금지', 'color:#C23A55;font-weight:700', 'color:#9C868C'); } catch(e){}
 store.loadLocal();
+store.loadSnap();   // 서버 모드였으면 지난 상태를 먼저 그린다
 render();
 store.connect();

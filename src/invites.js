@@ -90,15 +90,19 @@ export async function handleJoin(req, env, url) {
   return joinPage(url.origin, null, inv.name, url.searchParams.get('new') === '1');
 }
 
-export async function liveInvites(env, planId, userKey, origin) {
-  const r = await env.DB.prepare(
+export function liveInvitesStmt(env, planId, userKey) {
+  return env.DB.prepare(
     'SELECT token, type, created_at, expires_at FROM invites ' +
     "WHERE ((type = 'plan' AND plan_id = ?) OR (type = 'referral' AND created_by = ?)) " +
     'AND used_at IS NULL AND expires_at > ? ORDER BY created_at'
-  ).bind(planId, userKey, Date.now()).all();
-  return (r.results || []).map(x => ({
-    token: x.token, type: x.type,
-    url: origin + (x.type === 'plan' ? '/join/' : '/r/') + x.token,
-    createdAt: x.created_at, expiresAt: Number(x.expires_at)
-  }));
+  ).bind(planId, userKey, Date.now());
+}
+export const inviteRow = origin => x => ({
+  token: x.token, type: x.type,
+  url: origin + (x.type === 'plan' ? '/join/' : '/r/') + x.token,
+  createdAt: x.created_at, expiresAt: Number(x.expires_at)
+});
+export async function liveInvites(env, planId, userKey, origin) {
+  const r = await liveInvitesStmt(env, planId, userKey).all();
+  return (r.results || []).map(inviteRow(origin));
 }

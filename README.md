@@ -59,7 +59,7 @@ wedding_management/
 | 경로 | 설명 |
 |---|---|
 | `GET /api/me` | 로그인한 사람, 현재 계획, 파일 저장소 켜짐 여부 |
-| `GET /api/state` | 계획 설정·멤버·초대 + 모든 항목 + 파일 + 레퍼런스 태그/좋아요 + 카테고리 + 용량 |
+| `GET /api/state` | 계획 설정·멤버·초대 + 모든 항목 + 파일 + 레퍼런스 태그/좋아요 + 카테고리 + 용량 + `me`(위와 같은 사용자 정보). 앱은 이것 하나로 시작하고, 쿼리는 `DB.batch` 한 번으로 받는다 |
 | `PUT /api/plan` | 설정 병합 저장 (예식일·총예산·이름·지역·웨딩홀·카테고리별 예산·참석률…) |
 | `PUT/DELETE /api/<col>/<id>` · `PUT /api/<col>` | 항목 하나 / 여러 개 (`<col>` = vendors payments events tasks guests memos) |
 | `POST /api/plan/invite` · `POST /api/referral` · `DELETE /api/invite/<token>` | 초대 링크 |
