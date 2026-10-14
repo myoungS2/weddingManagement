@@ -64,13 +64,16 @@ export async function handleAdmin(req, env, url, u) {
   const venueOne = path.match(/^\/api\/admin\/venues\/([A-Za-z0-9:_-]{1,40})$/);
   if (venueOne && method === 'POST') {
     const b = await req.json(), id = venueOne[1];
+    let r;
     if (b.action === 'approve') {
-      await env.DB.prepare("UPDATE venues SET status = 'ok' WHERE id = ?").bind(id).run();
+      r = await env.DB.prepare("UPDATE venues SET status = 'ok' WHERE id = ?").bind(id).run();
     } else if (b.action === 'merge' && b.into) {
-      await env.DB.prepare("UPDATE venues SET status = 'merged', merged_into = ? WHERE id = ?").bind(String(b.into), id).run();
+      r = await env.DB.prepare("UPDATE venues SET status = 'merged', merged_into = ? WHERE id = ?").bind(String(b.into), id).run();
     } else if (b.action === 'reject') {
-      await env.DB.prepare("DELETE FROM venues WHERE id = ? AND status = 'pending'").bind(id).run();
+      r = await env.DB.prepare("DELETE FROM venues WHERE id = ? AND status = 'pending'").bind(id).run();
     } else return json({ error: 'action 은 approve | merge | reject' }, 400);
+    /* 바뀐 줄이 없으면 조용히 ok 하지 않는다(예전에 ID 가 잘려 와도 성공처럼 보였다) */
+    if (!(r.meta && r.meta.changes)) return json({ error: '그 웨딩홀을 찾지 못했습니다' }, 404);
     return json({ ok: true });
   }
 

@@ -62,7 +62,9 @@ export function init() {
     if (d.copy) { const el=$(d.copy); try { await navigator.clipboard.writeText(el.value); toast('복사했습니다'); } catch(err){ el.select(); toast('길게 눌러 복사하세요'); } return; }
     if (d.killinv) { try { const r=await store.call('DELETE','/api/invite/'+d.killinv); state.invites=r.invites; render(); } catch(err){ toast(err.message); } return; }
     if (d.csv) return exportCsv(d.csv);
-    if (d.venue) { const [a,id]=d.venue.split(':'); try { await store.call('POST','/api/admin/venues/'+id,{action:a}); loadAdmin(); } catch(err){ toast(err.message); } return; }
+    if (d.venue) { /* 웨딩홀 ID 자체에 ':' 가 들어 있다(m:… · k:…). 첫 ':' 에서만 자른다 */
+      const i=d.venue.indexOf(':'), a=d.venue.slice(0,i), id=d.venue.slice(i+1);
+      try { await store.call('POST','/api/admin/venues/'+id,{action:a}); toast(a==='approve'?'승인했습니다':'반려했습니다'); loadAdmin(); } catch(err){ toast(err.message); } return; }
     if (d.delcat) { if (!arm(t,'×')) return; try { await store.call('DELETE','/api/admin/categories/'+d.delcat); await store.pull(); } catch(err){ toast(err.message); } return; }
     if (d.premium) { if (!arm(t,'한 번 더')) return; try { await store.call('POST','/api/admin/purchases',{planId:d.premium, product:'premium', amount:0, ref:'manual'}); loadAdmin(); } catch(err){ toast(err.message); } return; }
     if (d.delplan) { if (!arm(t,'×')) return; try { await store.call('DELETE','/api/admin/plans/'+d.delplan); loadAdmin(); } catch(err){ toast(err.message); } return; }
