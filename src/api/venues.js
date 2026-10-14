@@ -52,12 +52,13 @@ export async function kakaoSearch(env, q) {
     const r = await fetch('https://dapi.kakao.com/v2/local/search/keyword.json?size=10&query=' + encodeURIComponent(q + ' 웨딩홀'), {
       headers: { authorization: 'KakaoAK ' + env.KAKAO_REST_KEY }
     });
-    if (!r.ok) return [];
+    /* 거절 사유(키 틀림 · 카카오맵 사용 꺼짐 등)는 로그에만 남기고 화면은 빈 결과로 */
+    if (!r.ok) { const e = await r.json().catch(() => ({})); console.error('kakao search failed', r.status, e.errorType || '', e.message || ''); return []; }
     const j = await r.json();
     return (j.documents || []).map(d => ({
       kakaoId: d.id, name: d.place_name, placeUrl: d.place_url,
       /* 주소·좌표는 화면에 지금 보여 주기만 하고 저장하지 않는다 */
       address: d.road_address_name || d.address_name, category: d.category_name
     }));
-  } catch (e) { return []; }
+  } catch (e) { console.error('kakao search error', e && e.message); return []; }
 }
