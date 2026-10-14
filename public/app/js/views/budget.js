@@ -5,7 +5,7 @@ import { emptyBox, head, segs, warnLocal } from '../render.js';
 import { closeSheet, openSheet } from '../sheet.js';
 import { state } from '../state.js';
 import { store } from '../store.js';
-import { $, arm, budgetRows, esc, filesOf, fmtB, fmtD, hostOf, krwPer, man, normUrl, num, paidOf, toKrw, toast, today, uid, vendorOf, vendorTotal, won } from '../util.js';
+import { $, arm, budgetRows, esc, filesOf, fmtB, fmtD, hostOf, krwPer, man, normUrl, num, paidOf, toKrw, toast, today, tripsOf, uid, vendorOf, vendorTotal, won } from '../util.js';
 
 /* ── 예산 ── */
 export function renderBudget(){
@@ -46,10 +46,15 @@ export function payerBox(){
 
 /* 업체 상세 시트 */
 export function openVendor(id, catId){
-  const v = id ? vendorOf(id) : { id:uid(), name:'', category:catId||(state.categories[0]||{}).id||'etc', status:'candidate', amountMode:'direct', amount:'', unitPrice:'', qty:'', extra:'', payer:'both', contact:{name:'',phone:''}, memo:'', links:[], questions:[], extras:[], createdAt:today() };
+  const v = id ? vendorOf(id) : { id:uid(), name:'', category:catId||(state.categories[0]||{}).id||'etc', status:'candidate', amountMode:'direct', amount:'', unitPrice:'', qty:'', extra:'', payer:'both', contact:{name:'',phone:''}, memo:'', links:[], questions:[], extras:[], trips:[], createdAt:today() };
   if (!v) return;
   const isNew = !id;
   const draft = JSON.parse(JSON.stringify(v));
+  /* 예전 데이터(업체당 예약 하나 v.trip)는 예약 목록으로 옮긴다. 저장하면 새 모양으로 남는다. */
+  if (!Array.isArray(draft.trips)) { draft.trips = tripsOf(draft).map(t=>Object.assign({}, t, { id:uid() })); delete draft.trip; }
+  const curDef = () => (state.settings.honeymoon||{}).currency||'USD';
+  const fxHint = c => { const k=krwPer(c); return k ? '1 '+c+' = '+won(k)+'원' : '환율은 신혼여행 화면을 한 번 열면 받아옵니다'; };
+  const saveTrips = () => { if (!isNew) store.put('vendors', draft); };
   const body = () => {
     const pays = state.payments.filter(p=>p.vendorId===v.id).sort((a,b)=>(a.dueDate||'9').localeCompare(b.dueDate||'9'));
     const fs = filesOf('vendor', v.id);
@@ -59,14 +64,32 @@ export function openVendor(id, catId){
     '<div class="field"><label>금액 <span class="segs" style="margin-left:8px;vertical-align:middle"><button type="button" data-mode="direct" aria-pressed="'+(draft.amountMode!=='formula')+'">직접 입력</button><button type="button" data-mode="formula" aria-pressed="'+(draft.amountMode==='formula')+'">단가 × 수량</button></span></label>' +
     (draft.amountMode==='formula'
       ? '<div class="inline"><input id="f-unit" data-money inputmode="numeric" value="'+esc(draft.unitPrice)+'" placeholder="단가" style="width:110px"> × <input id="f-qty" inputmode="numeric" value="'+esc(draft.qty)+'" placeholder="수량" style="width:70px"> + <input id="f-extra" data-money inputmode="numeric" value="'+esc(draft.extra)+'" placeholder="추가 금액" style="width:110px"><span class="num" style="margin-left:auto;font-weight:600">= '+won(num(draft.unitPrice)*num(draft.qty)+num(draft.extra))+'</span></div><p class="muted small" style="margin-top:4px">예: 식대 53,000 × 300 + 대관료</p>'
-      : '<input id="f-amount" data-money inputmode="numeric" value="'+(draft.amount?won(draft.amount):'')+'" placeholder="0">')+'</div>' +
+      : '<input id="f-amount" data-money inputmode="numeric" value="'+(draft.amount?won(draft.amount):'')+'" placeholder="0">') +
+    (draft.category==='honeymoon' ? '<p class="muted small" style="margin-top:4px">패키지·기본 금액. 항공·숙소처럼 예약별 금액은 아래 여행 예약에 적으면 여기에 더해집니다.</p>' : '')+'</div>' +
     '<div class="grid2"><div class="field"><label>부담</label><select id="f-payer">'+Object.keys(PAYER).map(k=>'<option value="'+k+'"'+(k===(draft.payer||'both')?' selected':'')+'>'+PAYER[k]+'</option>').join('')+'</select></div>' +
     '<div class="field"><label>담당자</label><input id="f-cname" value="'+esc((draft.contact||{}).name||'')+'" placeholder="담당 실장님"></div></div>' +
     '<div class="field"><label>연락처</label><input id="f-cphone" type="tel" value="'+esc((draft.contact||{}).phone||'')+'" placeholder="010-"></div>' +
-    (draft.category==='honeymoon' ? (function(){ const t=draft.trip||{}; const cur=t.currency||(state.settings.honeymoon||{}).currency||'USD'; const k=krwPer(cur); return '<div class="sub-list" style="margin-top:0;border-top:0;padding-top:0"><h4>여행 예약 <span class="right">항공 · 숙소 · 투어</span></h4>' +
-      '<div class="grid2"><div class="field"><label>종류</label><select id="tr-type">'+Object.keys(TRIP_TYPES).map(x=>'<option value="'+x+'"'+(x===(t.type||'flight')?' selected':'')+'>'+TRIP_TYPES[x]+'</option>').join('')+'</select></div><div class="field"><label>예약번호</label><input id="tr-ref" value="'+esc(t.ref||'')+'" placeholder="PNR, 예약 코드"></div></div>' +
-      '<div class="grid2"><div class="field"><label>시작</label><input id="tr-start" type="date" value="'+esc(t.start||'')+'"></div><div class="field"><label>종료</label><input id="tr-end" type="date" value="'+esc(t.end||'')+'"></div></div>' +
-      '<div class="field"><label>현지 통화 금액</label><div class="inline"><select id="tr-cur" style="width:84px">'+CURRENCIES.map(c=>'<option'+(c===cur?' selected':'')+'>'+c+'</option>').join('')+'</select><input id="tr-local" data-money="dec" inputmode="decimal" value="'+esc(t.localAmount||'')+'" placeholder="0" style="width:120px"><button type="button" class="btn sm" id="tr-conv" '+(k?'':'disabled')+'>원화로 환산해 금액에 넣기</button></div>'+(k?'<p class="muted small" style="margin-top:4px">1 '+cur+' = '+won(k)+'원</p>':'<p class="muted small" style="margin-top:4px">환율은 신혼여행 화면을 한 번 열면 받아옵니다</p>')+'</div></div>'; })() : '') +
+    (draft.category==='honeymoon' || (draft.trips||[]).length ? (function(){
+      /* 여행 예약: 업체(여행사·항공사·호텔) 하나에 예약을 여러 개. 예약마다 금액을 적고, 그 합이 업체 금액에 더해진다. */
+      const cur0=curDef(), trips=draft.trips||[];
+      const typeSel=(attr,sel)=>'<select class="c2 t" '+attr+' aria-label="종류">'+Object.keys(TRIP_TYPES).map(x=>'<option value="'+x+'"'+(x===sel?' selected':'')+'>'+TRIP_TYPES[x]+'</option>').join('')+'</select>';
+      const curSel=(attr,sel)=>'<select '+attr+' aria-label="통화">'+CURRENCIES.map(c=>'<option'+(c===sel?' selected':'')+'>'+c+'</option>').join('')+'</select>';
+      const row=t=>{ const c=t.currency||cur0; return '<div class="pay trip">'+typeSel('data-tf="type:'+t.id+'"',t.type||'flight') +
+        '<input class="c2 num amt" data-money data-tf="amount:'+t.id+'" inputmode="numeric" value="'+(num(t.amount)?won(t.amount):'')+'" placeholder="금액 (원)" aria-label="금액">' +
+        '<input class="c2 ref" data-tf="ref:'+t.id+'" value="'+esc(t.ref||'')+'" placeholder="예약번호" aria-label="예약번호">' +
+        '<label class="c2 f fd"><span>시작</span><input type="date" data-tf="start:'+t.id+'" value="'+esc(t.start||'')+'"></label>' +
+        '<label class="c2 f fd"><span>종료</span><input type="date" data-tf="end:'+t.id+'" value="'+esc(t.end||'')+'"></label>' +
+        '<label class="c2 f curw"><span>현지 통화 금액</span><div class="cur">'+curSel('data-tf="currency:'+t.id+'"',c)+'<input data-money="dec" inputmode="decimal" data-tf="localAmount:'+t.id+'" value="'+(num(t.localAmount)?num(t.localAmount).toLocaleString('ko-KR'):'')+'" placeholder="0" aria-label="현지 통화 금액"></div></label>' +
+        '<span class="c3 fx">'+fxHint(c)+'</span><button type="button" class="c2 btn sm conv" data-tconv="'+t.id+'" '+(krwPer(c)?'':'disabled')+'>원화로 환산</button><button class="c1 x" data-deltrip="'+t.id+'" aria-label="예약 삭제">×</button></div>'; };
+      const sumT=trips.reduce((s,t)=>s+num(t.amount),0);
+      return '<div class="sub-list"><h4>여행 예약 <span class="right">항공 · 숙소 · 투어 · 예약 금액은 업체 금액에 더해집니다</span></h4>' +
+        (trips.length ? '<div class="pays">'+trips.map(row).join('')+'</div>' : '<p class="muted small">아직 예약이 없습니다. 항공권, 숙소, 투어를 금액과 함께 적어 두세요.</p>') +
+        '<div class="pay new trip"><div class="c6 newh">새 예약</div>'+typeSel('id="t-type"','flight') +
+          '<input class="c2 num amt" id="t-amount" data-money inputmode="numeric" placeholder="금액 (원)" aria-label="금액"><input class="c2 ref" id="t-ref" placeholder="예약번호 (PNR)" aria-label="예약번호">' +
+          '<label class="c2 f fd"><span>시작</span><input type="date" id="t-start"></label><label class="c2 f fd"><span>종료</span><input type="date" id="t-end"></label>' +
+          '<label class="c2 f curw"><span>현지 통화 금액</span><div class="cur">'+curSel('id="t-cur"',cur0)+'<input id="t-local" data-money="dec" inputmode="decimal" placeholder="0" aria-label="현지 통화 금액"></div></label>' +
+          '<span class="c2 fx">'+fxHint(cur0)+'</span><button type="button" class="c2 btn sm conv" data-tconv="new" '+(krwPer(cur0)?'':'disabled')+'>원화로 환산</button><button class="c2 add btn sm primary" id="addTrip">추가</button></div>' +
+        (trips.length ? '<p class="muted small" style="margin-top:8px">예약 합계 '+won(sumT)+' · 업체 금액 '+won(vendorTotal(draft))+'</p>' : '')+'</div>'; })() : '') +
     '<div class="field"><label>메모 <span class="muted">탈락 이유, 포함 사항, 조건</span></label><textarea id="f-memo">'+esc(draft.memo||'')+'</textarea></div>' +
     (isNew ? '<p class="muted small">저장하면 바로 이어서 결제(예약금·중도금·잔금·할부), 확인 질문, 구성 항목, 첨부를 적을 수 있어요.</p>' :
     '<div class="sub-list"><h4>결제 <span class="right">예약금 · 중도금 · 잔금 · 할부 · 추가금</span></h4>' +
@@ -104,7 +127,6 @@ export function openVendor(id, catId){
     draft.contact = { name:$('#f-cname').value.trim(), phone:$('#f-cphone').value.trim() }; draft.memo = $('#f-memo').value;
     if (draft.amountMode==='formula') { draft.unitPrice=num($('#f-unit').value); draft.qty=num($('#f-qty').value); draft.extra=num($('#f-extra').value); }
     else draft.amount = num($('#f-amount').value);
-    if ($('#tr-type')) draft.trip = { type:$('#tr-type').value, ref:$('#tr-ref').value.trim(), start:$('#tr-start').value, end:$('#tr-end').value, currency:$('#tr-cur').value, localAmount:$('#tr-local').value.trim() };
   };
   openSheet(isNew ? '새 업체' : v.name, body, [
     isNew ? null : { label:'삭제', cls:'danger', onClick:(b)=>{ if (!arm(b)) return; closeSheet(); store.del('vendors', v.id); toast('지웠습니다'); } },
@@ -112,10 +134,14 @@ export function openVendor(id, catId){
       if (draft.category==='venue' && draft.status==='contracted' && !(state.settings.venue && state.settings.venue.name)) { store.settingsPatch({ venue:{ name:draft.name, fromVendor:draft.id } }, true); toast('설정의 웨딩홀도 '+draft.name+'(으)로 채웠어요'); } if (isNew) { toast('저장됨. 이어서 결제를 적을 수 있어요'); setTimeout(()=>openVendor(draft.id), 150); } else toast('저장됨'); } }
   ], {
     click(e){
-      const t = e.target.closest('[data-mode],#addPay,#addQ,#addX,#addLink,#tr-conv,[data-delpay],[data-delq],[data-delx],[data-dellink],[data-copylink]'); if (!t) return;
-      if (t.id==='tr-conv') { sync(); const k=toKrw($('#tr-local').value, $('#tr-cur').value); if (k==null) return toast('환율이 아직 없습니다'); draft.amountMode='direct'; draft.amount=k; repaint(); toast(won(k)+'원으로 넣었습니다'); return; }
+      const t = e.target.closest('[data-mode],#addPay,#addQ,#addX,#addLink,#addTrip,[data-tconv],[data-deltrip],[data-delpay],[data-delq],[data-delx],[data-dellink],[data-copylink]'); if (!t) return;
       if (t.dataset.copylink) { navigator.clipboard.writeText(t.dataset.copylink).then(()=>toast('복사했습니다')).catch(()=>toast('복사하지 못했습니다')); return; }
       sync();
+      if (t.dataset.tconv) {
+        if (t.dataset.tconv==='new') { const k=toKrw($('#t-local').value, $('#t-cur').value); if (k==null) return toast('환율이 아직 없습니다'); $('#t-amount').value=won(k); toast(won(k)+'원으로 넣었습니다'); return; }
+        const b=(draft.trips||[]).find(x=>x.id===t.dataset.tconv); if (!b) return; const k=toKrw(b.localAmount, b.currency||curDef()); if (k==null) return toast('환율이 아직 없습니다'); b.amount=k; saveTrips(); repaint(); toast(won(k)+'원으로 넣었습니다'); return; }
+      if (t.id==='addTrip') { const b={ id:uid(), type:$('#t-type').value, ref:$('#t-ref').value.trim(), start:$('#t-start').value, end:$('#t-end').value, amount:num($('#t-amount').value), currency:$('#t-cur').value, localAmount:num($('#t-local').value) }; if (!b.amount && !b.ref && !b.start && !b.localAmount) return toast('금액이나 예약번호를 적어 주세요'); (draft.trips=draft.trips||[]).push(b); saveTrips(); repaint(); return; }
+      if (t.dataset.deltrip) { draft.trips=(draft.trips||[]).filter(x=>x.id!==t.dataset.deltrip); saveTrips(); repaint(); return; }
       if (t.dataset.mode) { draft.amountMode = t.dataset.mode; repaint(); }
       if (t.id==='addPay') { const a=num($('#p-amount').value); if (!a) return toast('금액을 적어 주세요'); store.put('payments', { id:uid(), vendorId:v.id, title:$('#p-title').value, amount:a, dueDate:$('#p-date').value, paidAt:'', payer:$('#p-payer').value, method:$('#p-method').value, memo:$('#p-memo').value.trim() }); repaint(); }
       if (t.id==='addQ') { const q=$('#q-new').value.trim(); if (!q) return; (draft.questions=draft.questions||[]).push({id:uid(),q,a:'',done:false}); store.put('vendors', draft); repaint(); }
@@ -128,7 +154,10 @@ export function openVendor(id, catId){
     },
     change(e){
       const t = e.target;
-      if (t.id==='f-cat') { sync(); repaint(); return; }
+      sync();
+      if (t.id==='f-cat') { repaint(); return; }
+      if (t.dataset.tf) { const [k,id] = t.dataset.tf.split(':'); const b=(draft.trips||[]).find(x=>x.id===id); if (b) { b[k] = k==='amount'||k==='localAmount' ? num(t.value) : t.value.trim(); saveTrips(); if (k==='amount'||k==='currency') repaint(); } return; }
+      if (t.id==='t-cur') { const box=t.closest('.pay'); box.querySelector('.fx').textContent=fxHint(t.value); box.querySelector('[data-tconv]').disabled=!krwPer(t.value); return; }
       if (t.dataset.paid) { const p = state.payments.find(x=>x.id===t.dataset.paid); if (p) { store.put('payments', Object.assign({}, p, { paidAt: t.checked ? today() : '' })); repaint(); } }
       if (t.dataset.pf) { const [k,id] = t.dataset.pf.split(':'); const p = state.payments.find(x=>x.id===id); if (p) { const val = k==='amount' ? num(t.value) : t.value; store.put('payments', Object.assign({}, p, { [k]: val })); if (k==='amount') repaint(); } }
       if (t.dataset.qdone) { sync(); const q=(draft.questions||[]).find(x=>x.id===t.dataset.qdone); if (q) { q.done=t.checked; store.put('vendors', draft); } }

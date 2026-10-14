@@ -16,7 +16,10 @@
 .pay .x{justify-self:end;align-self:center}
 .pay.new{border-style:dashed;border-color:var(--pink2);margin-top:10px;background:var(--pink-mist)}
 .pay .newh{font-size:12px;font-weight:600;color:var(--pink-ink)}
-.pay #addPay{height:34px;justify-content:center}
+.pay #addPay,.pay #addTrip{height:34px;justify-content:center}
+/* 여행 예약 행: 종류 · 금액 · 예약번호 / 시작 · 종료 · 현지 통화 / 환율 안내 · 환산 · 삭제 */
+.pay.trip .cur{display:grid;grid-template-columns:76px 1fr;gap:4px}
+.pay.trip .fx{font-size:11.5px;color:var(--muted);align-self:center}
 /* 시트가 좁을 때(휴대폰): 금액과 날짜가 잘리지 않게 한 줄을 더 쓴다 */
 #sheetBody{container-type:inline-size}
 @container (max-width:460px){
@@ -24,6 +27,8 @@
   .pay .amt,.pay .fd,.pay .fp,.pay .fm{grid-column:span 3}
   .pay .memo{grid-column:span 5}.pay .x{grid-column:span 1}
   .pay.new .t{grid-column:span 3}.pay.new .memo{grid-column:1 / -1}.pay.new .add{grid-column:1 / -1}
+  .pay.trip .t,.pay.trip .amt,.pay.trip .ref,.pay.trip .fd,.pay.trip .curw{grid-column:span 3}
+  .pay.trip .fx{grid-column:1 / -1}.pay.trip .conv{grid-column:span 5}.pay.new.trip .conv{grid-column:1 / -1}
 }
 /* 시트: 넓으면 오른쪽, 좁으면 아래에서 */
 #scrim{position:fixed;inset:0;background:rgba(80,40,50,.32);z-index:30}

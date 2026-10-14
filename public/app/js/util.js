@@ -21,7 +21,9 @@ export const vendorOf = id => state.vendors.find(v=>v.id===id);
 export const nameOf = e => { const m = state.members.find(x=>x.email===e); return m ? m.name : (e||'').split('@')[0]; };
 export function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); }
 export function arm(btn, ask){ if (btn.dataset.armed) return true; btn.dataset.armed='1'; const old=btn.textContent; btn.textContent=ask||'한 번 더 누르면 지웁니다'; setTimeout(()=>{ delete btn.dataset.armed; btn.textContent=old; },2500); return false; }
-export function vendorTotal(v){ const base = v.amountMode==='formula' ? num(v.unitPrice)*num(v.qty)+num(v.extra) : num(v.amount); return base + (v.extras||[]).reduce((s,x)=>s+num(x.amount),0); }
+export function vendorTotal(v){ const base = v.amountMode==='formula' ? num(v.unitPrice)*num(v.qty)+num(v.extra) : num(v.amount); return base + (v.extras||[]).reduce((s,x)=>s+num(x.amount),0) + tripsOf(v).reduce((s,t)=>s+num(t.amount),0); }
+/* 여행 예약 목록. 예전 데이터는 업체당 예약 하나(v.trip)였고 금액은 업체 금액에 직접 들어 있었다 → 금액 0인 예약 하나로 읽는다. */
+export function tripsOf(v){ if (Array.isArray(v.trips)) return v.trips; const t = v.trip; return t && (t.type||t.ref||t.start||t.end||t.localAmount) ? [Object.assign({ id:'legacy', amount:0 }, t)] : []; }
 export function paidOf(vid){ return state.payments.filter(p=>p.vendorId===vid && p.paidAt).reduce((s,p)=>s+num(p.amount),0); }
 export function rels(){ return state.settings.rels && state.settings.rels.length ? state.settings.rels : DEF_RELS; }
 export function filesOf(owner, id){ return state.files.filter(f=>f.owner===owner && f.ownerId===id); }
