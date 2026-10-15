@@ -8,6 +8,11 @@ const key = () => '#' + state.view + (state.sub[state.view] ? '/' + state.sub[st
 let overlay = null;      // 지금 열린 창을 닫는 함수
 let backing = false;     // 창을 버튼으로 닫아 history.back() 을 부르고 popstate 를 기다리는 중
 let queued = [];         // 그 사이에 들어온 기록 작업. popstate 뒤에 한다
+let guard = null;        // 화면을 떠나기 전에 물을 것 (하객 그리드의 저장 안 한 행). fn(이어서 할 일) → 지금 옮겨도 되면 true
+
+export function setGuard(fn){ guard = fn; }
+/* guard 가 막지 않으면 바로, 막으면 사용자가 고른 뒤에 fn 을 한다 */
+export function guarded(fn){ if (!guard || guard(fn)) fn(); }
 
 /* 사용 안내는 창 안에서 탭을 옮긴다. 닫혔을 때 화면이 주소와 다르면 앞 화면을 덮지 않고 새로 쌓는다 */
 function settle(){ if (location.hash !== key()) history.pushState(null, '', key()); }
@@ -22,6 +27,7 @@ function readHash(){
 /* 탭·하위 탭 이동. sub 만 바꾸려면 view 에 지금 탭을 넘긴다 */
 export function go(view, sub){
   const moved = state.view !== view;
+  if (moved && guard && !guard(() => go(view, sub))) return;
   state.view = view; if (sub) state.sub[view] = sub;
   if (moved) { state.openCat = null; window.scrollTo(0,0); }
   later(() => { if (location.hash !== key()) history.pushState(null, '', key()); });
@@ -50,6 +56,9 @@ export function init(){
       return;
     }
     if (overlay) { const c = overlay; overlay = null; c(); settle(); return; }
+    /* 뒤로가기로 하객 화면을 떠나려는데 저장 안 한 행이 있으면, 주소를 되돌려 놓고 묻는다 */
+    const want = location.hash.slice(1).split('/');
+    if (guard && /^[a-z]+$/.test(want[0]) && want[0] !== state.view && !guard(() => go(want[0], want[1]))) { history.pushState(null, '', key()); return; }
     if (readHash()) { state.openCat = null; render(); }
   });
 }

@@ -1,12 +1,12 @@
 /* Wedding Management · © 2026 myoung. All rights reserved.
  * 클릭·변경·입력 이벤트와 웨딩홀 콤보박스. */
-import { DEF_AVG, DEF_RATE, DEF_TAGS, LS } from './constants.js';
+import { DEF_TAGS, LS } from './constants.js';
 import { openEvent, openTask } from './edit.js';
 import { download, exportCsv } from './export.js';
 import { delFile, pickFiles } from './files.js';
 import { openGuide, playIntro } from './guide.js';
-import { importBudget, importGuests, seedDday, seedGuide } from './importers.js';
-import { go } from './nav.js';
+import { importBudget, seedDday, seedGuide } from './importers.js';
+import { go, guarded } from './nav.js';
 import { render } from './render.js';
 import { closeSheet, openMemo } from './sheet.js';
 import { COLS, state } from './state.js';
@@ -56,10 +56,10 @@ export function init() {
 
   /* ═══ 이벤트 ═══════════════════════════════ */
   document.addEventListener('click', async e => {
-    const t = e.target.closest('[data-view],[data-sub],[data-go],[data-cat],[data-addvendor],[data-vendor],[data-deltask],[data-edittask],[data-editev],[data-month],[data-delev],[data-upload],[data-delfile],[data-gf],[data-rsvp],[data-delguest],[data-memo],[data-ref],[data-rtag],[data-deltag],[data-copy],[data-killinv],[data-csv],[data-venue],[data-delcat],[data-premium],[data-delplan],[data-unlock],[data-forceout],[data-deluser],[data-pickvenue],[data-reqvenue],button');
+    const t = e.target.closest('[data-view],[data-sub],[data-go],[data-cat],[data-addvendor],[data-vendor],[data-deltask],[data-edittask],[data-editev],[data-month],[data-delev],[data-upload],[data-delfile],[data-gf],[data-memo],[data-ref],[data-rtag],[data-deltag],[data-copy],[data-killinv],[data-csv],[data-venue],[data-delcat],[data-premium],[data-delplan],[data-unlock],[data-forceout],[data-deluser],[data-pickvenue],[data-reqvenue],button');
     if (!t) return;
     const d = t.dataset;
-    if (d.view) return go(d.view);
+    if (d.view) { if (t.classList.contains('soon')) return toast('하객 관리는 준비 중입니다'); return go(d.view); }
     if (d.sub) { const [k,v]=d.sub.split(':'); state.sub[k]=v; return go(state.view); }
     if (d.go==='more:guide') return openGuide(0);
     if (d.go) { const [k,v]=d.go.split(':'); return go(k, v); }
@@ -75,9 +75,7 @@ export function init() {
     if (d.month) { const b=(state.month||today().slice(0,7)).split('-').map(Number); const dt=new Date(b[0], b[1]-1+Number(d.month), 1); state.month=dt.getFullYear()+'-'+p2(dt.getMonth()+1); return render(); }
     if (d.upload!==undefined) { const [o,i]=d.upload.split(':'); return pickFiles(o, i); }
     if (d.delfile) { if (!arm(t,'×')) return; return delFile(d.delfile); }
-    if (d.gf) { state.guestF=d.gf; return render(); }
-    if (d.rsvp) { const g=state.guests.find(x=>x.id===d.rsvp); if (g) store.put('guests', Object.assign({}, g, { rsvp:{'':'y',y:'n',n:''}[g.rsvp||''] })); return; }
-    if (d.delguest) { if (!arm(t,'×')) return; return store.del('guests', d.delguest); }
+    if (d.gf) return guarded(() => { state.guestF=d.gf; render(); });
     if (d.memo) return openMemo(d.memo);
     if (d.deltag) { e.stopPropagation(); if (!arm(t,'×')) return; try { await store.call('DELETE','/api/ref/tags/'+d.deltag); state.refTags=state.refTags.filter(x=>x.id!==d.deltag); state.refFileTags=state.refFileTags.filter(x=>x.tagId!==d.deltag); if (state.refTag===d.deltag) state.refTag='all'; render(); } catch(err){ toast(err.message); } return; }
     if (d.rtag) { state.refTag=d.rtag; return render(); }
@@ -104,8 +102,6 @@ export function init() {
       case 'addTask': { const ti=$('#t-title').value.trim(); if (!ti) return; store.put('tasks',{ id:uid(), title:ti, group:$('#t-group').value.trim()||'직접 추가', due:$('#t-due').value, done:false, who:'both', memo:$('#t-memo').value.trim() }); return; }
       case 'addStep': { const ti=$('#s-title').value.trim(); if (!ti) return; const n=state.events.filter(x=>x.kind==='dday').length; store.put('events',{ id:uid(), kind:'dday', title:ti, minutes:num($('#s-min').value)||10, sort:n+1, date:state.settings.weddingDate||'', memo:$('#s-memo').value.trim() }); return; }
       case 'addEvent': { const ti=$('#e-title').value.trim(), dt=$('#e-date').value; if (!ti||!dt) return toast('날짜와 일정을 적어 주세요'); store.put('events',{ id:uid(), kind:'event', title:ti, date:dt, time:$('#e-time').value, vendorId:$('#e-vendor').value, memo:$('#e-memo').value.trim() }); return; }
-      case 'addGuest': { const n=$('#g-name').value.trim(); if (!n) return; store.put('guests',{ id:uid(), side:$('#g-side').value, rel:$('#g-rel').value, name:n, plus:num($('#g-plus').value), rsvp:'', memo:'', gift:0, meal:0 }); $('#g-name').focus(); return; }
-      case 'importGuests': return importGuests();
       case 'importBudget': return importBudget();
       case 'saveTrip': { const hm=Object.assign({}, state.settings.honeymoon||{}, { dest:$('#hm-dest').value.trim(), currency:$('#hm-cur').value, start:$('#hm-start').value, end:$('#hm-end').value }); return store.settingsPatch({ honeymoon: hm }); }
       case 'addWish': { const ti=$('#w-title').value.trim(); if (!ti) return; store.put('events', { id:uid(), kind:'trip', title:ti, memo:$('#w-memo').value.trim(), date:'', time:'', sort:Date.now() }); return; }
@@ -137,9 +133,6 @@ export function init() {
     if (d.catbudget!==undefined) { const cb=Object.assign({}, state.settings.catBudget||{}); cb[d.catbudget]=num(t.value); store.settingsPatch({catBudget:cb}, true); }
     if (d.min) { const x=state.events.find(y=>y.id===d.min); if (x) store.put('events', Object.assign({}, x, {minutes:num(t.value)})); }
     if (t.id==='ddayStart') store.settingsPatch({ddayStart:t.value}, true);
-    if (d.rate) { const r=Object.assign({}, state.settings.rates||DEF_RATE); r[d.rate]=num(t.value); store.settingsPatch({rates:r}, true); }
-    if (d.avg) { const r=Object.assign({}, state.settings.avgGift||DEF_AVG); r[d.avg]=num(t.value); store.settingsPatch({avgGift:r}, true); }
-    if (d.gift||d.meal) { const id=d.gift||d.meal; const g=state.guests.find(x=>x.id===id); if (g) store.put('guests', Object.assign({}, g, { [d.gift?'gift':'meal']: num(t.value) })); }
     if (d.catname||d.catsort) { const id=d.catname||d.catsort; store.call('PUT','/api/admin/categories/'+id,{ name:$('[data-catname="'+id+'"]').value, sort:num($('[data-catsort="'+id+'"]').value) }).then(()=>store.pull()).catch(err=>toast(err.message)); }
   });
   document.addEventListener('keydown', e => { if (e.key==='Escape') { if (!$('#show').hidden) closeShow(); else if (!$('#sheet').hidden) closeSheet(); } });

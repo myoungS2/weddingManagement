@@ -61,3 +61,5 @@ header.ph .sub{font-size:12px;color:var(--muted)}
   main{padding:28px 32px 48px}
 }
 
+/* 준비 중인 탭(하객): 회색으로, 누르면 '준비 중' 알림 */
+nav.tabs button.soon{color:#B9AEB0;cursor:default}nav.tabs button.soon img{filter:grayscale(1) opacity(.3)}nav.tabs button.soon:hover{background:none}

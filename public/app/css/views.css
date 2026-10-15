@@ -84,3 +84,21 @@
 #show .nv{position:absolute;top:0;bottom:0;width:30%}
 #show .nv.l{left:0}#show .nv.r{right:0}
 
+/* 하객 그리드: 칸을 바로 고친다. 칸 너비는 colgroup 으로 고정해 들쭉날쭉하지 않게 */
+.gbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 10px}.gbar .sp{flex:1}
+#gg{font-size:13px;table-layout:fixed;min-width:1010px}
+#gg .w-ck{width:40px}#gg .w-no{width:48px}#gg .w-side{width:84px}#gg .w-rel{width:100px}#gg .w-name{width:150px}#gg .w-invited{width:116px}#gg .w-rsvp{width:92px}#gg .w-plus{width:80px}#gg .w-gift{width:120px}#gg .w-meal{width:64px}
+#gg th{padding:8px 8px;position:sticky;top:0;background:var(--bg);z-index:2}#gg td{padding:4px 4px;border-bottom:1px solid var(--line)}
+#gg input:not([type=checkbox]),#gg select{padding:5px 6px;border:1px solid transparent;border-radius:6px;font-size:13px;width:100%;min-width:0;background:transparent;height:30px;box-sizing:border-box}
+#gg input:not([type=checkbox]):hover,#gg select:hover{border-color:var(--line2)}#gg input:not([type=checkbox]):focus,#gg select:focus{border-color:var(--pink-ink);background:var(--surface);outline:0}
+#gg input[type=checkbox]{width:17px;height:17px;accent-color:var(--pink-ink);vertical-align:middle}
+#gg .ck,#gg .c-invited{text-align:center}#gg .no{color:var(--muted);font-size:11.5px;white-space:nowrap}#gg .no b{display:block;font-weight:600;font-size:10.5px}
+#gg th.c-plus,#gg th.c-gift,#gg th.c-meal{text-align:right;padding-right:12px}#gg .c-plus input,#gg .c-gift input,#gg .c-meal input{text-align:right}
+#gg .rs-y{color:var(--good);font-weight:600}#gg .rs-n{color:var(--muted)}
+#gg tr.new td{background:var(--pink-mist)}#gg tr.new .no b{color:var(--pink-ink)}
+#gg tr.mod td{background:var(--bg2)}#gg tr.mod .no b{color:var(--warn)}
+#gg tr.on td{background:var(--pink-soft)}
+.card.meal{margin-bottom:14px}.card.meal .mg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}.card.meal .v{font-size:22px;font-weight:700;color:var(--pink-ink);margin-top:2px}.card.meal .v small{font-size:12px;font-weight:500;color:var(--muted);margin-left:2px}
+@media (max-width:560px){.card.meal .mg{grid-template-columns:repeat(2,1fr)}}
+.filters .gq{margin-left:auto;min-width:180px;padding:7px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--surface);font-size:13px}
+@media (max-width:560px){.filters .gq{margin-left:0;flex:1 1 100%}}

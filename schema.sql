@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   PRIMARY KEY (plan_id, id)
 );
 
--- 하객. data: { side(groom|bride), rel, name, plus, rsvp(''|y|n), memo, gift, meal }
+-- 하객. data: { side(groom|bride), rel, name, plus, invited(청첩장 전달), rsvp(''|y|n 참석), memo, gift(축의금), meal(식권) }
 CREATE TABLE IF NOT EXISTS guests (
   plan_id    TEXT NOT NULL,
   id         TEXT NOT NULL,

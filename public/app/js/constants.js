@@ -9,8 +9,6 @@ export const PAY_TYPES = ['예약금(계약금)','중도금','잔금','할부','
 export const payerCol = p => p==='groom'||p==='groomFamily' ? 'groom' : p==='bride'||p==='brideFamily' ? 'bride' : 'both';
 export const SIDE = { groom:'신랑', bride:'신부' };
 export const DEF_RELS = ['가족','친척','친구','직장','지인'];
-export const DEF_RATE = { '가족':95, '친척':80, '친구':75, '직장':60, '지인':50 };
-export const DEF_AVG  = { '가족':30, '친척':15, '친구':7, '직장':5, '지인':5 };
 export const KINDS = { contract:'계약서', audio:'음악', video:'영상', image:'사진', doc:'문서', other:'기타' };
 export const TRIP_TYPES = { flight:'항공', hotel:'숙소', tour:'투어·액티비티', transport:'교통·렌터카', insurance:'보험·유심', etc:'기타' };
 export const CURRENCIES = ['USD','EUR','JPY','THB','VND','PHP','IDR','MYR','SGD','AUD','NZD','GBP','CHF','HKD','TWD','CAD','MXN','TRY','AED','MVR','CZK','HUF'];

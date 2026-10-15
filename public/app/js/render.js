@@ -11,8 +11,13 @@ import { renderPlan } from './views/plan.js';
 import { renderTrip } from './views/trip.js';
 
 /* ═══ 그리기 ═══════════════════════════════ */
+/* 하객 탭은 준비 중. 관리자와 로컬 개발(localhost)에서만 연다 */
+export function guestOpen(){ return state.admin || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname); }
 export function render(){
+  const gOpen = guestOpen();
+  if (!gOpen && state.view==='guest' && !state.loading) state.view = 'home';   // 주소(#guest)로 들어와도 막는다
   document.querySelectorAll('#tabs [data-view]').forEach(b => b.setAttribute('aria-current', b.dataset.view===state.view ? 'page' : 'false'));
+  const gb = document.querySelector('#tabs [data-view="guest"]'); if (gb) { gb.classList.toggle('soon', !gOpen); gb.setAttribute('aria-disabled', String(!gOpen)); }
   $('#me').innerHTML = state.user ? esc(state.user.name) + '<br><span class="small">' + esc(state.plan ? state.plan.name : '') + '</span>' : '<span class="small">이 기기에만 저장 중</span>';
   const v = $('#view');
   if (state.loading) { v.innerHTML = '<p class="muted" style="padding:40px 0;text-align:center">불러오는 중…</p>'; return; }

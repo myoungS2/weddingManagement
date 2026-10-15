@@ -6,6 +6,7 @@ import { init as init2 } from './viewer.js';
 import { init as init3 } from './events.js';
 import { init as init4 } from './guide.js';
 import { init as init5 } from './nav.js';
+import { init as init6 } from './views/guest.js';
 import { maybeGuide, playIntro } from './guide.js';
 import { render } from './render.js';
 import { store } from './store.js';
@@ -15,6 +16,7 @@ init1();   // files.js
 init2();   // viewer.js
 init3();   // events.js
 init4();   // guide.js
+init6();   // views/guest.js
 
 playIntro(false);
 maybeGuide();

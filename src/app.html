@@ -5,7 +5,8 @@
     <button data-view="home" aria-current="page"><img src="/art/flowers.webp" alt=""><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
     <button data-view="budget"><img src="/art/rings.webp" alt=""><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>예산</button>
     <button data-view="plan"><img src="/art/cake.webp" alt=""><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>일정</button>
-    <!-- 하객 탭은 2026-10-07 요청으로 배포본에서 숨김. 로컬(localhost)에서만 pages/app.js 가 이 자리에 버튼을 넣는다. --><!--GUEST_TAB-->
+    <!-- 하객 탭은 준비 중: 관리자(와 로컬)만 열리고, 다른 사람에겐 회색으로 보이며 누르면 '준비 중' (render.js 의 guestOpen) -->
+    <button data-view="guest"><img src="/art/envelope.webp" alt=""><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 4.5a3 3 0 0 1 0 6M17.5 14a5.5 5.5 0 0 1 3.5 6"/></svg>하객</button>
     <button data-view="trip"><img src="/art/glasses.webp" alt=""><svg viewBox="0 0 24 24"><path d="M10.5 13.5 4 11l1.5-1.5 6.5 1.2 4.3-4.3a1.8 1.8 0 0 1 2.5 2.5L14.5 13l1.2 6.5L14.2 21l-2.5-6.5-3 3 .3 2.5-1.3 1.3-1.5-3.5L2.7 16.3 4 15l2.5.3z"/></svg>여행</button>
     <button data-view="more"><img src="/art/bow.webp" alt=""><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더보기</button>
     <div class="spacer"></div>

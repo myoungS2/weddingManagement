@@ -31,7 +31,7 @@ export async function handleItemsApi(req, env, url, u) {
       return json({ ok: true });
     }
   }
-  /* 여러 개 한 번에 (가이드 할 일 채우기, CSV 가져오기) */
+  /* 여러 개 한 번에 (가이드 할 일 채우기, CSV 가져오기, 하객 그리드 저장·삭제) */
   const colBulk = path.match(/^\/api\/(vendors|payments|events|tasks|guests|memos)$/);
   if (colBulk && method === 'PUT') {
     const col = colBulk[1];
@@ -47,6 +47,14 @@ export async function handleItemsApi(req, env, url, u) {
     const at = nowIso();
     await env.DB.batch(items.map(x => env.DB.prepare(upsertSql(col)).bind(pid, String(x.id), JSON.stringify(x), at, uk, uk)));
     return json({ ok: true, saved: items.length });
+  }
+
+  if (colBulk && method === 'DELETE') {
+    const body = await req.json().catch(() => ({}));
+    const ids = (Array.isArray(body.ids) ? body.ids : []).map(String).filter(x => /^[A-Za-z0-9_-]{1,64}$/.test(x));
+    if (ids.length > 500) return json({ error: '한 번에 500개까지만 지웁니다' }, 400);
+    for (const id of ids) await deleteItem(env, pid, colBulk[1], id);
+    return json({ ok: true, deleted: ids.length });
   }
 
   return null;

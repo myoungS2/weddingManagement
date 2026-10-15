@@ -68,6 +68,14 @@ export const store = {
     if (state.mode==='api') { try { await this.call('PUT','/api/'+col, {items}); } catch(e){ toast(e.message); } }
     else this.saveLocal();
   },
+  /* 여러 개 저장·삭제를 한 번에 (하객 그리드의 저장) */
+  async saveMany(col, items, ids){
+    for (const it of items) { const i = state[col].findIndex(x=>x.id===it.id); if (i>=0) state[col][i]=it; else state[col].push(it); }
+    const gone = new Set(ids); state[col] = state[col].filter(x=>!gone.has(x.id));
+    render();
+    if (state.mode==='api') { try { if (items.length) await this.call('PUT','/api/'+col, {items}); if (ids.length) await this.call('DELETE','/api/'+col, {ids}); } catch(e){ toast(e.message); this.pull().catch(()=>{}); } }
+    else this.saveLocal();
+  },
   async del(col, id){
     state[col] = state[col].filter(x=>x.id!==id);
     if (col==='vendors') { state.payments = state.payments.filter(p=>p.vendorId!==id); state.events = state.events.filter(e=>e.vendorId!==id); }
