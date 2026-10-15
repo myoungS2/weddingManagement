@@ -1,6 +1,7 @@
 /* Wedding Management · © 2026 myoung. All rights reserved.
  * 오른쪽(넓은 화면)·아래(좁은 화면)에서 열리는 편집 시트와 메모. */
 import { paintHelper } from './guide.js';
+import { closed, opened } from './nav.js';
 import { state } from './state.js';
 import { store } from './store.js';
 import { $, arm, esc, filesOf, toast, uid } from './util.js';
@@ -13,10 +14,10 @@ export function openSheet(title, body, buttons, handlers){
   const ft = $('#sheetFoot'); ft.innerHTML='';
   buttons.filter(Boolean).forEach(b => { const el=document.createElement('button'); el.className='btn '+(b.cls||''); el.textContent=b.label; if (b.cls==='primary') el.style.marginLeft='auto'; el.onclick=()=>b.onClick(el); ft.appendChild(el); });
   sheetHandlers = handlers||null;
-  $('#scrim').hidden=false; $('#sheet').hidden=false; document.body.style.overflow='hidden'; $('#helper').hidden=true;
+  $('#scrim').hidden=false; $('#sheet').hidden=false; document.body.style.overflow='hidden'; $('#helper').hidden=true; opened(closeSheet);
   const f = $('#sheetBody').querySelector('input,textarea,select'); if (f && matchMedia('(min-width:900px)').matches) f.focus();
 }
-export function closeSheet(){ $('#scrim').hidden=true; $('#sheet').hidden=true; document.body.style.overflow=''; sheetHandlers=null; paintHelper(); }
+export function closeSheet(){ $('#scrim').hidden=true; $('#sheet').hidden=true; document.body.style.overflow=''; sheetHandlers=null; paintHelper(); closed(); }
 
 export function openMemo(id){
   const m = id ? state.memos.find(x=>x.id===id) : { id:uid(), title:$('#m-title')?$('#m-title').value.trim():'', body:'' };

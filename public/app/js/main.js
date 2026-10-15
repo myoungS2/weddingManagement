@@ -5,6 +5,7 @@ import { init as init1 } from './files.js';
 import { init as init2 } from './viewer.js';
 import { init as init3 } from './events.js';
 import { init as init4 } from './guide.js';
+import { init as init5 } from './nav.js';
 import { maybeGuide, playIntro } from './guide.js';
 import { render } from './render.js';
 import { store } from './store.js';
@@ -20,5 +21,6 @@ maybeGuide();
 try { console.info('%cWedding Management%c  © 2026 myoung · 무단 사용 금지', 'color:#C23A55;font-weight:700', 'color:#9C868C'); } catch(e){}
 store.loadLocal();
 store.loadSnap();   // 서버 모드였으면 지난 상태를 먼저 그린다
+init5();   // nav.js — 주소의 #탭/하위탭 을 읽고 뒤로가기를 잡는다
 render();
 store.connect();

@@ -6,12 +6,13 @@ import { download, exportCsv } from './export.js';
 import { delFile, pickFiles } from './files.js';
 import { openGuide, playIntro } from './guide.js';
 import { importBudget, importGuests, seedDday, seedGuide } from './importers.js';
+import { go } from './nav.js';
 import { render } from './render.js';
 import { closeSheet, openMemo } from './sheet.js';
 import { COLS, state } from './state.js';
 import { store } from './store.js';
 import { $, arm, esc, moneyFormat, num, p2, toKrw, toast, today, uid, won } from './util.js';
-import { openShow } from './viewer.js';
+import { closeShow, openShow } from './viewer.js';
 import { openVendor } from './views/budget.js';
 import { contractedVenue, loadAdmin, openRef, refShown } from './views/more.js';
 
@@ -58,10 +59,10 @@ export function init() {
     const t = e.target.closest('[data-view],[data-sub],[data-go],[data-cat],[data-addvendor],[data-vendor],[data-deltask],[data-edittask],[data-editev],[data-month],[data-delev],[data-upload],[data-delfile],[data-gf],[data-rsvp],[data-delguest],[data-memo],[data-ref],[data-rtag],[data-deltag],[data-copy],[data-killinv],[data-csv],[data-venue],[data-delcat],[data-premium],[data-delplan],[data-unlock],[data-forceout],[data-deluser],[data-pickvenue],[data-reqvenue],button');
     if (!t) return;
     const d = t.dataset;
-    if (d.view) { state.view=d.view; state.openCat=null; window.scrollTo(0,0); return render(); }
-    if (d.sub) { const [k,v]=d.sub.split(':'); state.sub[k]=v; return render(); }
+    if (d.view) return go(d.view);
+    if (d.sub) { const [k,v]=d.sub.split(':'); state.sub[k]=v; return go(state.view); }
     if (d.go==='more:guide') return openGuide(0);
-    if (d.go) { const [k,v]=d.go.split(':'); state.view=k; state.sub[k]=v; window.scrollTo(0,0); return render(); }
+    if (d.go) { const [k,v]=d.go.split(':'); return go(k, v); }
     if (d.addvendor!==undefined) return openVendor(null, d.addvendor);
     if (d.addday) { const ti=$('[data-dtitle="'+d.addday+'"]').value.trim(); if (!ti) return; store.put('events', { id:uid(), kind:'trip', title:ti, memo:'', date:d.addday, time:$('[data-dtime="'+d.addday+'"]').value, sort:Date.now() }); return; }
     if (d.unplan) { const x=state.events.find(y=>y.id===d.unplan); if (x) store.put('events', Object.assign({}, x, { date:'', time:'' })); return; }
@@ -141,7 +142,7 @@ export function init() {
     if (d.gift||d.meal) { const id=d.gift||d.meal; const g=state.guests.find(x=>x.id===id); if (g) store.put('guests', Object.assign({}, g, { [d.gift?'gift':'meal']: num(t.value) })); }
     if (d.catname||d.catsort) { const id=d.catname||d.catsort; store.call('PUT','/api/admin/categories/'+id,{ name:$('[data-catname="'+id+'"]').value, sort:num($('[data-catsort="'+id+'"]').value) }).then(()=>store.pull()).catch(err=>toast(err.message)); }
   });
-  document.addEventListener('keydown', e => { if (e.key==='Escape') { if (!$('#show').hidden) { $('#show').hidden=true; document.body.style.overflow=''; } else if (!$('#sheet').hidden) closeSheet(); } });
+  document.addEventListener('keydown', e => { if (e.key==='Escape') { if (!$('#show').hidden) closeShow(); else if (!$('#sheet').hidden) closeSheet(); } });
   document.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.money !== undefined) moneyFormat(e.target);
     if (e.target.id==='fx-amt') { const cur=$('#hm-cur').value, k=toKrw(e.target.value, cur); $('#fx-out').textContent = '= '+(k==null?'?':won(k))+'원'; return; }

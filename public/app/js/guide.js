@@ -1,5 +1,6 @@
 /* Wedding Management · © 2026 myoung. All rights reserved.
  * 비둘기 도우미 · 사용 안내 투어 · 인트로. */
+import { closed, go, opened } from './nav.js';
 import { render } from './render.js';
 import { state } from './state.js';
 import { $, esc, toast, today } from './util.js';
@@ -31,8 +32,8 @@ export const GUIDE_STEPS = [
   { view:'more', sub:['more','menu'], target:'[data-go="more:share"]', title:'둘이 같이 쓰기', body:'함께하기에서 파트너 초대 링크를 만들어 보내세요. 같은 장부를 둘 다 보고 고칩니다. 이 안내는 더보기에서 다시 볼 수 있어요.', last:'설정에서 시작하기' }
 ];
 let guideIdx = 0, guideOn = false;
-export function openGuide(i){ guideIdx = i||0; guideOn = true; $('#guide').hidden=false; $('#helper').hidden=true; paintGuide(); }
-export function closeGuide(){ guideOn=false; $('#guide').hidden=true; try { localStorage.setItem('wm.guide','1'); } catch(e){} paintHelper(); }
+export function openGuide(i){ guideIdx = i||0; guideOn = true; $('#guide').hidden=false; $('#helper').hidden=true; paintGuide(); opened(closeGuide); }
+export function closeGuide(){ guideOn=false; $('#guide').hidden=true; try { localStorage.setItem('wm.guide','1'); } catch(e){} paintHelper(); closed(); }
 export function paintGuide(){
   const g = GUIDE_STEPS[guideIdx], last = guideIdx===GUIDE_STEPS.length-1;
   if (state.view!==g.view || (g.sub && state.sub[g.sub[0]]!==g.sub[1])) { state.view=g.view; if (g.sub) state.sub[g.sub[0]]=g.sub[1]; render(); }
@@ -85,7 +86,7 @@ export function init() {
   $('#guide').addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
     if (t.id==='gSkip') closeGuide();
-    if (t.id==='gNext') { if (guideIdx>=GUIDE_STEPS.length-1) { closeGuide(); state.view='more'; state.sub.more='settings'; render(); window.scrollTo(0,0); } else { guideIdx++; paintGuide(); } }
+    if (t.id==='gNext') { if (guideIdx>=GUIDE_STEPS.length-1) { closeGuide(); go('more','settings'); } else { guideIdx++; paintGuide(); } }
     if (t.id==='gPrev') { guideIdx=Math.max(0,guideIdx-1); paintGuide(); }
   });
   addEventListener('hashchange', ()=>maybeGuide(0));
