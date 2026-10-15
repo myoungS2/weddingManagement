@@ -20,10 +20,13 @@ export async function uploadFile(file, owner, ownerId){
   const kind = owner==='vendor' && !/^(audio|video)\//.test(type) ? (/^image\//.test(type) ? 'image' : 'contract') : kindOf(type, file.name);
   const q = new URLSearchParams({ owner, id: ownerId||'', kind, name: file.name });
   if (owner==='reference' && (state.refWho==='groom' || state.refWho==='bride')) q.set('who', state.refWho);
+  if (owner==='reference' && state.refTags.some(t=>t.id===state.refTag)) q.set('tag', state.refTag);
   const r = await fetch('/api/files?'+q, { method:'POST', credentials:'same-origin', headers:{'content-type':type}, body:blob });
   const j = await r.json().catch(()=>({}));
   if (!r.ok) throw new Error(j.error||'올리지 못했습니다');
-  state.files.unshift(j.file); state.usage = j.usage; return j.file;
+  state.files.unshift(j.file); state.usage = j.usage;
+  if (j.tagId) state.refFileTags.push({ fileId:j.file.id, tagId:j.tagId });
+  return j.file;
 }
 export function resizeImage(file, max, q){
   return new Promise((res, rej) => { const img = new Image(); const u = URL.createObjectURL(file);

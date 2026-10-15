@@ -42,8 +42,11 @@ export function renderRef(back){
   const likes = {}; state.refLikes.forEach(x=>(likes[x.fileId]=likes[x.fileId]||[]).push(x.who));
   const me = state.user ? state.user.email : 'me';
   const shown = refShown(all, tagOf, likes);
+  const upTag = state.refTags.find(t=>t.id===state.refTag);
+  const upWho = state.refWho==='groom' ? '신랑용' : state.refWho==='bride' ? '신부용' : '';
+  const upTo = [upWho, upTag && upTag.name].filter(Boolean).join(' · ');
   return head('레퍼런스', all.length+'장', back) +
-    '<div class="row" style="margin-bottom:10px"><button class="btn primary" data-upload="reference:" '+(state.filesOn?'':'disabled')+'>+ 캡처 올리기</button><button class="btn" id="showRef" '+(shown.length?'':'disabled')+'>상담용 보기'+(shown.length&&shown.length!==all.length?' ('+shown.length+')':'')+'</button><button class="btn ghost sm right" id="addTag">+ 태그</button>'+(state.refTags.length?'':'<button class="btn ghost sm" id="seedTags">기본 태그 넣기</button>')+'</div>' +
+    '<div class="row" style="margin-bottom:10px"><button class="btn primary" data-upload="reference:" '+(state.filesOn?'':'disabled')+'>'+(upTo?'+ '+esc(upTo)+'에 올리기':'+ 캡처 올리기')+'</button><button class="btn" id="showRef" '+(shown.length?'':'disabled')+'>상담용 보기'+(shown.length&&shown.length!==all.length?' ('+shown.length+')':'')+'</button><button class="btn ghost sm right" id="addTag">+ 태그</button>'+(state.refTags.length?'':'<button class="btn ghost sm" id="seedTags">기본 태그 넣기</button>')+'</div>' +
     (state.filesOn?'':'<div class="notice">파일 저장소(R2)를 켜면 올릴 수 있습니다. 인스타·핀터레스트는 링크로 가져올 수 없어서 캡처를 올리는 방식입니다.</div>') +
     '<div class="filters who">'+[['all','모두'],['groom','신랑용'],['bride','신부용'],['none','공통']].map(([k,l])=>'<button data-rwho="'+k+'" aria-pressed="'+(state.refWho===k)+'">'+l+'</button>').join('')+'</div>' +
     '<div class="filters">'+[['all','전체'],['both','둘 다 좋아요'],...state.refTags.map(t=>[t.id,t.name])].map(([k,l])=>'<button data-rtag="'+esc(k)+'" aria-pressed="'+(state.refTag===k)+'">'+esc(l)+(state.refTags.find(t=>t.id===k)?' <span data-deltag="'+esc(k)+'" style="margin-left:4px;opacity:.5">×</span>':'')+'</button>').join('')+'</div>' +

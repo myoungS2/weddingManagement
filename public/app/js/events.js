@@ -111,8 +111,8 @@ export function init() {
       case 'addMemo': return openMemo(null);
       case 'showRef': { const all=state.files.filter(f=>f.owner==='reference'); const tagOf={}; state.refFileTags.forEach(x=>(tagOf[x.fileId]=tagOf[x.fileId]||[]).push(x.tagId)); const likes={}; state.refLikes.forEach(x=>(likes[x.fileId]=likes[x.fileId]||[]).push(x.who));
         return openShow(refShown(all, tagOf, likes), 0); }
-      case 'addTag': { const name=prompt('태그 이름'); if (!name) return; try { const r=await store.call('POST','/api/ref/tags',{name}); state.refTags.push(r.tag); render(); } catch(err){ toast(err.message); } return; }
-      case 'seedTags': { for (const name of DEF_TAGS) { try { const r=await store.call('POST','/api/ref/tags',{name}); state.refTags.push(r.tag); } catch(err){ toast(err.message); break; } } return render(); }
+      case 'addTag': { const name=prompt('태그 이름'); if (!name) return; try { const r=await store.call('POST','/api/ref/tags',{name}); if (!state.refTags.some(x=>x.id===r.tag.id)) state.refTags.push(r.tag); render(); } catch(err){ toast(err.message); } return; }
+      case 'seedTags': { if (t.disabled) return; t.disabled=true; for (const name of DEF_TAGS) { if (state.refTags.some(x=>x.name===name)) continue; try { const r=await store.call('POST','/api/ref/tags',{name}); if (!state.refTags.some(x=>x.id===r.tag.id)) state.refTags.push(r.tag); } catch(err){ toast(err.message); break; } } return render(); }
       case 'dumpJson': { const o={}; for (const k of [...COLS,'settings','files','refTags','refFileTags']) o[k]=state[k]; return download('wedding-management.json', JSON.stringify(o,null,2), 'application/json'); }
       case 'makeInvite': { try { const r=await store.call('POST','/api/plan/invite',{}); state.invites=r.invites; render(); toast('링크를 만들었습니다'); } catch(err){ toast(err.message); } return; }
       case 'makeRef': { try { const r=await store.call('POST','/api/referral',{}); state.invites=r.invites; render(); } catch(err){ toast(err.message); } return; }

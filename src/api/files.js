@@ -43,7 +43,14 @@ export async function handleFilesApi(req, env, url, u) {
       'INSERT INTO files (id, plan_id, owner_type, owner_id, kind, name, size, content_type, object_key, memo, who, created_by, created_at) ' +
       'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
     ).bind(id, pid, owner, owner === 'reference' ? null : ownerId, kind, name, real, type, key, memo || null, who, uk, nowIso()).run();
-    return json({ ok: true, file: await fileRow(env, pid, id), usage: used + real, quota });
+    // 레퍼런스를 태그 필터를 고른 채로 올리면 그 태그를 바로 붙인다 (폴더에 올리듯이)
+    let tagId = null;
+    const tag = url.searchParams.get('tag');
+    if (owner === 'reference' && tag && /^[A-Za-z0-9_-]{1,32}$/.test(tag)) {
+      const t = await env.DB.prepare('SELECT id FROM ref_tags WHERE plan_id = ? AND id = ?').bind(pid, tag).first();
+      if (t) { await env.DB.prepare('INSERT OR IGNORE INTO ref_file_tags (plan_id, file_id, tag_id) VALUES (?,?,?)').bind(pid, id, t.id).run(); tagId = t.id; }
+    }
+    return json({ ok: true, file: await fileRow(env, pid, id), tagId, usage: used + real, quota });
   }
 
   const fileOne = path.match(/^\/file\/([a-f0-9]{32})$/);

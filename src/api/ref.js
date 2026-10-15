@@ -13,6 +13,9 @@ export async function handleRefApi(req, env, url, u) {
     const body = await req.json();
     const name = String(body.name || '').trim().slice(0, 20);
     if (!name) return json({ error: '태그 이름을 적어 주세요' }, 400);
+    // 같은 이름이 이미 있으면 새로 만들지 않고 그 태그를 돌려준다 (연타·동시 추가로 중복이 생기지 않게)
+    const same = await env.DB.prepare('SELECT id, name, sort FROM ref_tags WHERE plan_id = ? AND name = ?').bind(pid, name).first();
+    if (same) return json({ ok: true, tag: same, existed: true });
     const id = 't_' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
     const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM ref_tags WHERE plan_id = ?').bind(pid).first();
     if (Number(n.n) >= 60) return json({ error: '태그는 60개까지입니다' }, 409);
